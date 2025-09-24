@@ -49,13 +49,13 @@
     <div id="app" class="container mx-auto p-6 bg-[#2b2c45] rounded-xl shadow-lg">
         <!-- Espaço para o Logo da Empresa -->
         <div class="flex justify-center mb-6">
-            <!-- Substitua o URL abaixo pelo link do logo da sua empresa -->
+            <!-- Substitua o URL abaixo pelo link direto do logo da sua empresa -->
             <div class="w-32 h-32 bg-[#444569] rounded-full flex items-center justify-center text-white text-xs font-semibold uppercase">
-                <img src="https://drive.google.com/file/d/1Xq_PnsetP4MC8jLxmdh4LdhHjLlEDNh-/view?usp=sharing">
+                <img src="https://placehold.co/128x128/fff/2b2c45?text=Logo" alt="Logo" class="w-full h-full rounded-full object-cover">
             </div>
         </div>
         
-        <h1 class="text-3xl md:text-4xl font-extrabold text-white text-center mb-2">Gerenciador de Pedidos Weback</h1>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white text-center mb-2">Gerenciador de Locações</h1>
         <!-- O ID do usuário será exibido aqui para identificação e isolamento de dados -->
         <p id="user-info" class="text-xs text-gray-400 text-center mb-6">ID do usuário: Carregando...</p>
         
@@ -174,12 +174,20 @@
                         <input type="date" id="pedido-data" name="data" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
                     </div>
 
+                    <div>
+                        <label for="pedido-observacoes" class="block text-sm font-medium text-gray-300">Observações</label>
+                        <textarea id="pedido-observacoes" name="observacoes" rows="3" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500" placeholder="Adicione observações importantes sobre o pedido"></textarea>
+                    </div>
+
                     <button id="submit-pedido-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Adicionar Pedido</button>
                 </form>
             </div>
             
             <div class="card p-6">
-                <h2 class="text-xl font-bold mb-4">Lista de Pedidos</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">Lista de Pedidos</h2>
+                    <button id="export-pedidos-btn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Exportar para Excel</button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="table-auto min-w-full divide-y divide-gray-600">
                         <thead class="bg-gray-800">
@@ -189,12 +197,13 @@
                                 <th scope="col">Tipo de Ativo</th>
                                 <th scope="col">Descrição dos Ativos</th>
                                 <th scope="col">Data do Pedido</th>
+                                <th scope="col">Observações</th>
                                 <th scope="col" class="text-right">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="pedidos-list" class="bg-gray-700 divide-y divide-gray-600">
                             <!-- Pedidos serão inseridos aqui dinamicamente pelo JavaScript -->
-                            <tr><td colspan="6" class="text-center py-4 text-gray-400">Nenhum pedido cadastrado.</td></tr>
+                            <tr><td colspan="7" class="text-center py-4 text-gray-400">Nenhum pedido cadastrado.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -222,7 +231,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, addDoc, onSnapshot, query, serverTimestamp, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, collection, addDoc, onSnapshot, query, serverTimestamp, deleteDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
         // =========================================================================
@@ -254,6 +263,7 @@
         let editingClienteId = null;
         let editingAtivoId = null;
         let editingPedidoId = null;
+        let allPedidos = [];
 
         const modal = document.getElementById('message-modal');
         const modalTitle = document.getElementById('modal-title');
@@ -455,19 +465,24 @@
             onSnapshot(pedidosRef, (snapshot) => {
                 const pedidosList = document.getElementById('pedidos-list');
                 pedidosList.innerHTML = '';
+                allPedidos = [];
 
                 if (snapshot.empty) {
-                    pedidosList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">Nenhum pedido cadastrado.</td></tr>';
+                    pedidosList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">Nenhum pedido cadastrado.</td></tr>';
                     return;
                 }
                 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
+                    allPedidos.push({ id: doc.id, ...data });
+
                     const dataPedido = data.dataPedido || (data.dataCriacao ? new Date(data.dataCriacao.toDate()).toLocaleDateString() : 'N/A');
                     
                     const descricaoHtml = data.descricaoAtivos
                         ? `<ul><li>${data.descricaoAtivos}</li></ul>`
                         : 'N/A';
+                    
+                    const observacoesHtml = data.observacoes ? data.observacoes : 'N/A';
                         
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -476,6 +491,7 @@
                         <td class="whitespace-nowrap">${data.tipoAtivo}</td>
                         <td>${descricaoHtml}</td>
                         <td class="whitespace-nowrap">${dataPedido}</td>
+                        <td>${observacoesHtml}</td>
                         <td class="text-right whitespace-nowrap">
                             <button data-id="${doc.id}" class="edit-pedido-btn text-blue-400 hover:text-blue-200 mr-2">Editar</button>
                             <button data-id="${doc.id}" class="delete-pedido-btn text-red-400 hover:text-red-200">Excluir</button>
@@ -487,17 +503,20 @@
                 document.querySelectorAll('.edit-pedido-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
                         const id = e.target.getAttribute('data-id');
-                        const pedido = snapshot.docs.find(doc => doc.id === id).data();
+                        const pedido = allPedidos.find(p => p.id === id);
                         
-                        editingPedidoId = id;
-                        document.getElementById('pedido-cliente').value = Object.keys(clientesData).find(key => clientesData[key].nome === pedido.cliente.nome);
-                        document.getElementById('pedido-ativos').value = pedido.ativos;
-                        document.getElementById('pedido-tipo-ativo').value = pedido.tipoAtivo;
-                        document.getElementById('pedido-descricao-ativos').value = pedido.descricaoAtivos;
-                        document.getElementById('pedido-data').value = pedido.dataPedido || '';
+                        if (pedido) {
+                            editingPedidoId = id;
+                            document.getElementById('pedido-cliente').value = Object.keys(clientesData).find(key => clientesData[key].nome === pedido.cliente.nome);
+                            document.getElementById('pedido-ativos').value = pedido.ativos;
+                            document.getElementById('pedido-tipo-ativo').value = pedido.tipoAtivo;
+                            document.getElementById('pedido-descricao-ativos').value = pedido.descricaoAtivos;
+                            document.getElementById('pedido-data').value = pedido.dataPedido || '';
+                            document.getElementById('pedido-observacoes').value = pedido.observacoes || '';
 
-                        document.getElementById('submit-pedido-btn').innerText = 'Salvar Alterações';
-                        document.getElementById('pedidos-tab').click();
+                            document.getElementById('submit-pedido-btn').innerText = 'Salvar Alterações';
+                            document.getElementById('pedidos-tab').click();
+                        }
                     });
                 });
 
@@ -520,6 +539,43 @@
                 showModal("Erro de Dados", "Não foi possível carregar a lista de pedidos.");
             });
         }
+
+        // Função para exportar dados para CSV
+        document.getElementById('export-pedidos-btn').addEventListener('click', async () => {
+            if (allPedidos.length === 0) {
+                showModal("Atenção", "Não há pedidos para exportar.");
+                return;
+            }
+
+            // Cabeçalho do CSV
+            const headers = ["Cliente", "Ativos", "Tipo do Ativo", "Descrição dos Ativos", "Data do Pedido", "Observações"];
+            const headerRow = headers.join(";") + "\n";
+
+            // Dados
+            const csvRows = allPedidos.map(pedido => {
+                const clienteNome = `"${pedido.cliente.nome.replace(/"/g, '""')}"`;
+                const ativos = pedido.ativos;
+                const tipoAtivo = `"${pedido.tipoAtivo.replace(/"/g, '""')}"`;
+                const descricaoAtivos = `"${pedido.descricaoAtivos.replace(/"/g, '""')}"`;
+                const dataPedido = `"${pedido.dataPedido.replace(/"/g, '""')}"`;
+                const observacoes = `"${(pedido.observacoes || '').replace(/"/g, '""')}"`;
+                return [clienteNome, ativos, tipoAtivo, descricaoAtivos, dataPedido, observacoes].join(";");
+            }).join("\n");
+
+            const csvString = headerRow + csvRows;
+
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'pedidos_exportados.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showModal("Exportação Concluída", "Os pedidos foram exportados com sucesso para um arquivo CSV.");
+        });
+
 
         // Lógica de navegação entre as abas
         const tabs = document.querySelectorAll('.tab-button');
@@ -632,6 +688,7 @@
             const tipoAtivo = document.getElementById('pedido-tipo-ativo').value;
             const descricaoAtivo = document.getElementById('pedido-descricao-ativos').value;
             const dataPedido = document.getElementById('pedido-data').value;
+            const observacoes = document.getElementById('pedido-observacoes').value;
             
             const pedido = {
                 cliente: clientesData[clienteId],
@@ -639,6 +696,7 @@
                 tipoAtivo: tipoAtivo,
                 descricaoAtivos: descricaoAtivo,
                 dataPedido: dataPedido,
+                observacoes: observacoes,
             };
             
             try {
