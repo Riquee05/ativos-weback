@@ -23,7 +23,7 @@
             background-color: #2b2c45; /* Fundo dos cards com sombra e bordas arredondadas */
             border: 1px solid #444569;
             border-radius: 0.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1-px rgba(0, 0, 0, 0.12);
         }
         .table-auto {
             width: 100%;
@@ -167,6 +167,11 @@
                         <select id="pedido-descricao-ativos" name="descricao_ativos" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
                             <option value="">-- Selecione uma descrição --</option>
                         </select>
+                    </div>
+
+                    <div>
+                        <label for="pedido-data" class="block text-sm font-medium text-gray-300">Data do Pedido</label>
+                        <input type="date" id="pedido-data" name="data" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
                     </div>
 
                     <button id="submit-pedido-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Adicionar Pedido</button>
@@ -458,7 +463,7 @@
                 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    const dataPedido = data.dataCriacao ? new Date(data.dataCriacao.toDate()).toLocaleDateString() : 'N/A';
+                    const dataPedido = data.dataPedido || (data.dataCriacao ? new Date(data.dataCriacao.toDate()).toLocaleDateString() : 'N/A');
                     
                     const descricaoHtml = data.descricaoAtivos
                         ? `<ul><li>${data.descricaoAtivos}</li></ul>`
@@ -489,6 +494,7 @@
                         document.getElementById('pedido-ativos').value = pedido.ativos;
                         document.getElementById('pedido-tipo-ativo').value = pedido.tipoAtivo;
                         document.getElementById('pedido-descricao-ativos').value = pedido.descricaoAtivos;
+                        document.getElementById('pedido-data').value = pedido.dataPedido || '';
 
                         document.getElementById('submit-pedido-btn').innerText = 'Salvar Alterações';
                         document.getElementById('pedidos-tab').click();
@@ -625,12 +631,14 @@
             const ativos = document.getElementById('pedido-ativos').value;
             const tipoAtivo = document.getElementById('pedido-tipo-ativo').value;
             const descricaoAtivo = document.getElementById('pedido-descricao-ativos').value;
+            const dataPedido = document.getElementById('pedido-data').value;
             
             const pedido = {
                 cliente: clientesData[clienteId],
                 ativos: parseInt(ativos),
                 tipoAtivo: tipoAtivo,
                 descricaoAtivos: descricaoAtivo,
+                dataPedido: dataPedido,
             };
             
             try {
@@ -640,7 +648,6 @@
                     editingPedidoId = null;
                     document.getElementById('submit-pedido-btn').innerText = 'Adicionar Pedido';
                 } else {
-                    pedido.dataCriacao = serverTimestamp();
                     await addDoc(collection(db, `artifacts/${appId}/users/${userId}/pedidos`), pedido);
                     showModal("Sucesso!", "Pedido adicionado com sucesso.");
                 }
