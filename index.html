@@ -120,7 +120,6 @@
                         <select id="pedido-tipo-ativo" name="tipo_ativo" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
                             <option value="">-- Selecione o tipo --</option>
                             <option value="Notebook">Notebook</option>
-                            <option value="Notebook">Monitor</option>
                             <option value="Desktop">Desktop</option>
                             <option value="Smartphone">Smartphone</option>
                         </select>
@@ -153,6 +152,10 @@
             <div class="card p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold">Lista de Pedidos</h2>
+                </div>
+                <div class="flex items-center mb-4 space-x-2">
+                    <input type="text" id="filtro-pedidos" placeholder="Pesquisar por cliente..." class="w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                    <button id="sort-pedidos-btn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Ordenar A-Z</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="table-auto min-w-full divide-y divide-gray-600">
@@ -364,6 +367,95 @@
         const pedidosRef = collection(db, `artifacts/${appId}/public/data/pedidos`);
         const logPedidosRef = collection(db, `artifacts/${appId}/public/data/pedidos_concluidos`);
 
+        // Função para renderizar a lista de pedidos com base nos dados e filtro
+        function renderPedidosList(pedidosToRender) {
+            const pedidosList = document.getElementById('pedidos-list');
+            pedidosList.innerHTML = '';
+            
+            if (pedidosToRender.length === 0) {
+                pedidosList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">Nenhum pedido cadastrado.</td></tr>';
+                return;
+            }
+
+            pedidosToRender.forEach((data) => {
+                const dataPedido = data.dataPedido || 'N/A';
+                const descricaoHtml = data.descricaoAtivos
+                    ? `<ul><li>${data.descricaoAtivos}</li></ul>`
+                    : 'N/A';
+                const observacoesHtml = data.observacoes ? data.observacoes : 'N/A';
+                    
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="whitespace-nowrap">${data.cliente.nome}</td>
+                    <td class="whitespace-nowrap">${data.ativos}</td>
+                    <td class="whitespace-nowrap">${data.tipoAtivo}</td>
+                    <td>${descricaoHtml}</td>
+                    <td class="whitespace-nowrap">${dataPedido}</td>
+                    <td>${observacoesHtml}</td>
+                    <td class="text-right whitespace-nowrap">
+                        <button data-id="${data.id}" class="concluir-pedido-btn py-1 px-2 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2">Concluir</button>
+                        <button data-id="${data.id}" class="edit-pedido-btn text-blue-400 hover:text-blue-200 mr-2">Editar</button>
+                        <button data-id="${data.id}" class="delete-pedido-btn text-red-400 hover:text-red-200">Excluir</button>
+                    </td>
+                `;
+                pedidosList.appendChild(row);
+            });
+
+            document.querySelectorAll('.concluir-pedido-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    const pedido = allPedidos.find(p => p.id === id);
+                    if (pedido) {
+                        showModal("Confirmar Conclusão", `Deseja concluir o pedido de ${pedido.cliente.nome}?`, true, async () => {
+                            try {
+                                await addDoc(collection(db, `artifacts/${appId}/public/data/pedidos_concluidos`), { ...pedido, dataConclusao: new Date().toISOString() });
+                                await deleteDoc(doc(db, `artifacts/${appId}/public/data/pedidos`, id));
+                                showModal("Sucesso!", "Pedido concluído e movido para o log.");
+                            } catch (error) {
+                                console.error("Erro ao concluir pedido:", error);
+                                showModal("Erro!", "Não foi possível concluir o pedido. Tente novamente.");
+                            }
+                        });
+                    }
+                });
+            });
+
+            document.querySelectorAll('.edit-pedido-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    const pedido = allPedidos.find(p => p.id === id);
+                    
+                    if (pedido) {
+                        editingPedidoId = id;
+                        document.getElementById('pedido-cliente').value = Object.keys(clientesData).find(key => clientesData[key].nome === pedido.cliente.nome);
+                        document.getElementById('pedido-ativos').value = pedido.ativos;
+                        document.getElementById('pedido-tipo-ativo').value = pedido.tipoAtivo;
+                        document.getElementById('pedido-descricao-ativos').value = pedido.descricaoAtivos;
+                        document.getElementById('pedido-data').value = pedido.dataPedido || '';
+                        document.getElementById('pedido-observacoes').value = pedido.observacoes || '';
+
+                        document.getElementById('submit-pedido-btn').innerText = 'Salvar Alterações';
+                        document.getElementById('pedidos-tab').click();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.delete-pedido-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    showModal("Confirmar Exclusão", "Tem certeza que deseja excluir este pedido?", true, async () => {
+                        try {
+                            await deleteDoc(doc(db, `artifacts/${appId}/public/data/pedidos`, id));
+                            showModal("Sucesso!", "Pedido excluído com sucesso.");
+                        } catch (error) {
+                            console.error("Erro ao excluir pedido:", error);
+                            showModal("Erro!", "Não foi possível excluir o pedido. Tente novamente.");
+                        }
+                    });
+                });
+            });
+        }
+        
         // Configura os ouvintes de dados do Firestore para as coleções
         function setupFirestoreListeners() {
             if (!userId) {
@@ -497,97 +589,12 @@
 
             // Ouvinte para a coleção de Pedidos Ativos
             onSnapshot(pedidosRef, (snapshot) => {
-                const pedidosList = document.getElementById('pedidos-list');
-                pedidosList.innerHTML = '';
                 allPedidos = [];
-
-                if (snapshot.empty) {
-                    pedidosList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-400">Nenhum pedido cadastrado.</td></tr>';
-                    return;
-                }
-                
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     allPedidos.push({ id: doc.id, ...data });
-
-                    const dataPedido = data.dataPedido || (data.dataCriacao ? new Date(data.dataCriacao.toDate()).toLocaleDateString() : 'N/A');
-                    
-                    const descricaoHtml = data.descricaoAtivos
-                        ? `<ul><li>${data.descricaoAtivos}</li></ul>`
-                        : 'N/A';
-                    
-                    const observacoesHtml = data.observacoes ? data.observacoes : 'N/A';
-                        
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="whitespace-nowrap">${data.cliente.nome}</td>
-                        <td class="whitespace-nowrap">${data.ativos}</td>
-                        <td class="whitespace-nowrap">${data.tipoAtivo}</td>
-                        <td>${descricaoHtml}</td>
-                        <td class="whitespace-nowrap">${dataPedido}</td>
-                        <td>${observacoesHtml}</td>
-                        <td class="text-right whitespace-nowrap">
-                            <button data-id="${doc.id}" class="concluir-pedido-btn py-1 px-2 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2">Concluir</button>
-                            <button data-id="${doc.id}" class="edit-pedido-btn text-blue-400 hover:text-blue-200 mr-2">Editar</button>
-                            <button data-id="${doc.id}" class="delete-pedido-btn text-red-400 hover:text-red-200">Excluir</button>
-                        </td>
-                    `;
-                    pedidosList.appendChild(row);
                 });
-
-                document.querySelectorAll('.concluir-pedido-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const id = e.target.getAttribute('data-id');
-                        const pedido = allPedidos.find(p => p.id === id);
-                        if (pedido) {
-                            showModal("Confirmar Conclusão", `Deseja concluir o pedido de ${pedido.cliente.nome}?`, true, async () => {
-                                try {
-                                    await addDoc(collection(db, `artifacts/${appId}/public/data/pedidos_concluidos`), { ...pedido, dataConclusao: new Date().toISOString() });
-                                    await deleteDoc(doc(db, `artifacts/${appId}/public/data/pedidos`, id));
-                                    showModal("Sucesso!", "Pedido concluído e movido para o log.");
-                                } catch (error) {
-                                    console.error("Erro ao concluir pedido:", error);
-                                    showModal("Erro!", "Não foi possível concluir o pedido. Tente novamente.");
-                                }
-                            });
-                        }
-                    });
-                });
-
-                document.querySelectorAll('.edit-pedido-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const id = e.target.getAttribute('data-id');
-                        const pedido = allPedidos.find(p => p.id === id);
-                        
-                        if (pedido) {
-                            editingPedidoId = id;
-                            document.getElementById('pedido-cliente').value = Object.keys(clientesData).find(key => clientesData[key].nome === pedido.cliente.nome);
-                            document.getElementById('pedido-ativos').value = pedido.ativos;
-                            document.getElementById('pedido-tipo-ativo').value = pedido.tipoAtivo;
-                            document.getElementById('pedido-descricao-ativos').value = pedido.descricaoAtivos;
-                            document.getElementById('pedido-data').value = pedido.dataPedido || '';
-                            document.getElementById('pedido-observacoes').value = pedido.observacoes || '';
-
-                            document.getElementById('submit-pedido-btn').innerText = 'Salvar Alterações';
-                            document.getElementById('pedidos-tab').click();
-                        }
-                    });
-                });
-
-                document.querySelectorAll('.delete-pedido-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const id = e.target.getAttribute('data-id');
-                        showModal("Confirmar Exclusão", "Tem certeza que deseja excluir este pedido?", true, async () => {
-                            try {
-                                await deleteDoc(doc(db, `artifacts/${appId}/public/data/pedidos`, id));
-                                showModal("Sucesso!", "Pedido excluído com sucesso.");
-                            } catch (error) {
-                                console.error("Erro ao excluir pedido:", error);
-                                showModal("Erro!", "Não foi possível excluir o pedido. Tente novamente.");
-                            }
-                        });
-                    });
-                });
+                renderPedidosList(allPedidos);
             }, (error) => {
                 console.error("Erro ao carregar pedidos:", error);
                 showModal("Erro de Dados", "Não foi possível carregar a lista de pedidos.");
@@ -631,7 +638,7 @@
             });
         }
 
-        // Função para exportar dados para CSV
+        // Lógica para exportar dados para CSV
         document.getElementById('export-log-btn').addEventListener('click', async () => {
             if (concludedPedidos.length === 0) {
                 showModal("Atenção", "Não há pedidos no log para exportar.");
@@ -667,6 +674,33 @@
             showModal("Exportação Concluída", "O log de pedidos foi exportado com sucesso para um arquivo CSV.");
         });
 
+        // Lógica para filtrar e ordenar pedidos
+        let sortDirection = 'asc';
+        document.getElementById('filtro-pedidos').addEventListener('input', (e) => {
+            const filtro = e.target.value.toLowerCase();
+            const pedidosFiltrados = allPedidos.filter(pedido => 
+                pedido.cliente.nome.toLowerCase().includes(filtro)
+            );
+            renderPedidosList(pedidosFiltrados);
+        });
+
+        document.getElementById('sort-pedidos-btn').addEventListener('click', () => {
+            const pedidosOrdenados = [...allPedidos];
+            
+            pedidosOrdenados.sort((a, b) => {
+                const nomeA = a.cliente.nome.toLowerCase();
+                const nomeB = b.cliente.nome.toLowerCase();
+                if (sortDirection === 'asc') {
+                    return nomeA.localeCompare(nomeB);
+                } else {
+                    return nomeB.localeCompare(nomeA);
+                }
+            });
+
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            document.getElementById('sort-pedidos-btn').innerText = `Ordenar ${sortDirection === 'asc' ? 'A-Z' : 'Z-A'}`;
+            renderPedidosList(pedidosOrdenados);
+        });
 
         // Lógica de navegação entre as abas
         const tabs = document.querySelectorAll('.tab-button');
