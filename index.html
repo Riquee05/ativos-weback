@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Aluguel de Equipamentos</title>
+    <!-- Inclui o Tailwind CSS para estilização moderna e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e; /* Fundo roxo escuro para uma estética profissional */
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .tab-button.active {
+            background-color: #2c0e44; /* Roxo mais escuro para a aba ativa */
+            color: #fff;
+        }
+        .card {
+            background-color: #2b2c45; /* Fundo dos cards com sombra e bordas arredondadas */
+            border: 1px solid #444569;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
+        }
+        .table-auto {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-auto th, .table-auto td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid #444569;
+            vertical-align: top;
+        }
+        .table-auto th {
+            background-color: #1f2038;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body class="bg-[#1a1a2e] flex items-center justify-center p-4 min-h-screen">
+
+    <div id="app" class="container mx-auto p-6 bg-[#2b2c45] rounded-xl shadow-lg">
+        <!-- Espaço para o Logo da Empresa -->
+        <div class="flex justify-center mb-6">
+            <!-- Substitua o URL abaixo pelo link do logo da sua empresa -->
+            <div class="w-32 h-32 bg-[#444569] rounded-full flex items-center justify-center text-white text-xs font-semibold uppercase">
+                <img src="https://placehold.co/128x128/fff/2b2c45?text=Logo" alt="Logo" class="w-full h-full rounded-full object-cover">
+            </div>
+        </div>
+        
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white text-center mb-2">Gerenciador de Locações</h1>
+        <!-- O ID do usuário será exibido aqui para identificação e isolamento de dados -->
+        <p id="user-info" class="text-xs text-gray-400 text-center mb-6">ID do usuário: Carregando...</p>
+        
+        <!-- Navegação por abas -->
+        <div class="flex border-b border-gray-600">
+            <button id="clientes-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Clientes</button>
+            <button id="pedidos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Pedidos</button>
+            <button id="ativos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Ativos</button>
+        </div>
+
+        <!-- Seção de Clientes -->
+        <div id="clientes-section" class="tab-content mt-6">
+            <div class="card p-6 mb-8">
+                <h2 class="text-xl font-bold mb-4">Adicionar Novo Cliente</h2>
+                <form id="add-cliente-form" class="space-y-4">
+                    <div>
+                        <label for="cliente-nome" class="block text-sm font-medium text-gray-300">Nome Completo</label>
+                        <input type="text" id="cliente-nome" name="nome" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+                    <button id="submit-cliente-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Adicionar Cliente</button>
+                </form>
+            </div>
+            
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-4">Base de Clientes</h2>
+                <div class="overflow-x-auto">
+                    <table class="table-auto min-w-full divide-y divide-gray-600">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th scope="col">Nome</th>
+                                <th scope="col" class="text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientes-list" class="bg-gray-700 divide-y divide-gray-600">
+                            <!-- Clientes serão inseridos aqui dinamicamente pelo JavaScript -->
+                            <tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhum cliente cadastrado.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Ativos -->
+        <div id="ativos-section" class="tab-content mt-6 hidden">
+            <div class="card p-6 mb-8">
+                <h2 class="text-xl font-bold mb-4">Adicionar Descrição de Ativo</h2>
+                <form id="add-ativo-form" class="space-y-4">
+                    <div>
+                        <label for="ativo-descricao" class="block text-sm font-medium text-gray-300">Descrição do Ativo</label>
+                        <textarea id="ativo-descricao" name="descricao" rows="2" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500" required placeholder="Ex: Notebook Dell Latitude 3420"></textarea>
+                    </div>
+                    <button id="submit-ativo-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Adicionar Descrição</button>
+                </form>
+            </div>
+            
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-4">Base de Ativos</h2>
+                <div class="overflow-x-auto">
+                    <table class="table-auto min-w-full divide-y divide-gray-600">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th scope="col">Descrição do Ativo</th>
+                                <th scope="col" class="text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ativos-list" class="bg-gray-700 divide-y divide-gray-600">
+                            <!-- Ativos serão inseridos aqui dinamicamente pelo JavaScript -->
+                            <tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhuma descrição de ativo cadastrada.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Pedidos -->
+        <div id="pedidos-section" class="tab-content mt-6 hidden">
+            <div class="card p-6 mb-8">
+                <h2 class="text-xl font-bold mb-4">Adicionar Novo Pedido</h2>
+                <form id="add-pedido-form" class="space-y-4">
+                    <div>
+                        <label for="pedido-cliente" class="block text-sm font-medium text-gray-300">Selecione o Cliente</label>
+                        <select id="pedido-cliente" name="cliente" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                            <option value="">-- Selecione um cliente --</option>
+                        </select>
+                    </div>
+                    
+                    <div id="cliente-info-display" class="card p-4 bg-gray-700 text-sm hidden">
+                        <p class="font-bold">Detalhes do Cliente:</p>
+                        <p id="display-nome">Nome: </p>
+                    </div>
+
+                    <div>
+                        <label for="pedido-ativos" class="block text-sm font-medium text-gray-300">Número de Ativos</label>
+                        <input type="number" id="pedido-ativos" name="ativos" min="1" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+                    
+                    <div>
+                        <label for="pedido-tipo-ativo" class="block text-sm font-medium text-gray-300">Tipo do Ativo</label>
+                        <select id="pedido-tipo-ativo" name="tipo_ativo" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                            <option value="">-- Selecione o tipo --</option>
+                            <option value="Notebook">Notebook</option>
+                            <option value="Desktop">Desktop</option>
+                            <option value="Smartphone">Smartphone</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="pedido-descricao-ativos" class="block text-sm font-medium text-gray-300">Descrição do Ativo</label>
+                        <select id="pedido-descricao-ativos" name="descricao_ativos" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                            <option value="">-- Selecione uma descrição --</option>
+                        </select>
+                    </div>
+
+                    <button id="submit-pedido-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Adicionar Pedido</button>
+                </form>
+            </div>
+            
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-4">Lista de Pedidos</h2>
+                <div class="overflow-x-auto">
+                    <table class="table-auto min-w-full divide-y divide-gray-600">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th scope="col">Cliente</th>
+                                <th scope="col">Ativos</th>
+                                <th scope="col">Tipo de Ativo</th>
+                                <th scope="col">Descrição dos Ativos</th>
+                                <th scope="col">Data do Pedido</th>
+                                <th scope="col" class="text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pedidos-list" class="bg-gray-700 divide-y divide-gray-600">
+                            <!-- Pedidos serão inseridos aqui dinamicamente pelo JavaScript -->
+                            <tr><td colspan="6" class="text-center py-4 text-gray-400">Nenhum pedido cadastrado.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para mensagens/confirmação -->
+        <div id="message-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-[#2b2c45]">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg leading-6 font-medium text-white" id="modal-title"></h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-300" id="modal-body"></p>
+                    </div>
+                    <div class="items-center px-4 py-3 space-y-2">
+                        <button id="modal-confirm" class="hidden px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Confirmar</button>
+                        <button id="modal-close" class="px-4 py-2 bg-purple-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs - Configuração e Lógica do Aplicativo -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, addDoc, onSnapshot, query, serverTimestamp, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+
+        // =========================================================================
+        // PASSO 1: INFORMAÇÕES DE CONFIGURAÇÃO DO FIREBASE
+        // Esta é a sua configuração personalizada para o projeto do Firebase.
+        // =========================================================================
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD4BkAtcJC5oadau_Lcd93Mj8Mng-EbAaI",
+            authDomain: "ativos-weback.firebaseapp.com",
+            projectId: "ativos-weback",
+            storageBucket: "ativos-weback.firebasestorage.app",
+            messagingSenderId: "939169446624",
+            appId: "1:939169446624:web:060da204ef600cf30c6e85",
+            measurementId: "G-N2D559P8P6"
+        };
+        const appId = firebaseConfig.appId;
+
+        // =========================================================================
+        // FIM DA SEÇÃO DE CONFIGURAÇÃO
+        // =========================================================================
+
+        let db;
+        let auth;
+        let userId = null;
+        let clientesData = {}; 
+        let ativosData = {};
+        
+        let editingClienteId = null;
+        let editingAtivoId = null;
+        let editingPedidoId = null;
+
+        const modal = document.getElementById('message-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalCloseBtn = document.getElementById('modal-close');
+        const modalConfirmBtn = document.getElementById('modal-confirm');
+
+        // Função para exibir um modal customizado, substituindo o alert()
+        function showModal(title, message, isConfirmation = false, onConfirm = null) {
+            modalTitle.innerText = title;
+            modalBody.innerText = message;
+            if (isConfirmation) {
+                modalCloseBtn.innerText = "Cancelar";
+                modalConfirmBtn.classList.remove('hidden');
+                modalConfirmBtn.onclick = () => {
+                    if (onConfirm) onConfirm();
+                    modal.classList.add('hidden');
+                    modalConfirmBtn.classList.add('hidden');
+                    modalCloseBtn.innerText = "OK";
+                };
+            } else {
+                modalCloseBtn.innerText = "OK";
+                modalConfirmBtn.classList.add('hidden');
+            }
+            modalCloseBtn.onclick = () => {
+                modal.classList.add('hidden');
+                if (isConfirmation) {
+                    modalConfirmBtn.classList.add('hidden');
+                }
+            };
+            modal.classList.remove('hidden');
+        }
+
+        try {
+            // Inicializa o Firebase com a configuração fornecida
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            const analytics = getAnalytics(app);
+            
+            // Ouve as mudanças de estado de autenticação para garantir que o usuário
+            // esteja logado antes de tentar acessar o Firestore
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    document.getElementById('user-info').innerText = `ID do usuário: ${userId}`;
+                    setupFirestoreListeners();
+                } else {
+                    // Tenta fazer login anonimamente se o usuário não estiver autenticado
+                    // Isso é o ideal para um aplicativo de uso geral sem login de usuário
+                    try {
+                         await signInAnonymously(auth);
+                    } catch (error) {
+                         console.error("Erro ao autenticar anonimamente:", error);
+                         showModal("Erro de Autenticação", "Não foi possível conectar-se ao serviço de autenticação. Por favor, verifique se a autenticação de login anônimo está ativada no seu projeto do Firebase.");
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Erro ao inicializar o Firebase:", e);
+            showModal("Erro de Inicialização", "Não foi possível inicializar o aplicativo. Verifique a configuração do Firebase.");
+        }
+
+        // Configura os ouvintes de dados do Firestore para as três coleções
+        function setupFirestoreListeners() {
+            if (!userId) {
+                console.error("Erro: userId não disponível para configurar ouvintes do Firestore.");
+                return;
+            }
+
+            // Ouvinte para a coleção de Clientes
+            const clientesRef = collection(db, `artifacts/${appId}/users/${userId}/clientes`);
+            onSnapshot(clientesRef, (snapshot) => {
+                const clientesList = document.getElementById('clientes-list');
+                const clienteSelect = document.getElementById('pedido-cliente');
+                clientesList.innerHTML = '';
+                clienteSelect.innerHTML = '<option value="">-- Selecione um cliente --</option>';
+                clientesData = {};
+                
+                if (snapshot.empty) {
+                    clientesList.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhum cliente cadastrado.</td></tr>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    clientesData[doc.id] = data;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="whitespace-nowrap">${data.nome}</td>
+                        <td class="text-right whitespace-nowrap">
+                            <button data-id="${doc.id}" class="edit-cliente-btn text-blue-400 hover:text-blue-200 mr-2">Editar</button>
+                            <button data-id="${doc.id}" class="delete-cliente-btn text-red-400 hover:text-red-200">Excluir</button>
+                        </td>
+                    `;
+                    clientesList.appendChild(row);
+
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = data.nome;
+                    clienteSelect.appendChild(option);
+                });
+
+                document.querySelectorAll('.edit-cliente-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        editingClienteId = id;
+                        document.getElementById('cliente-nome').value = clientesData[id].nome;
+                        document.getElementById('submit-cliente-btn').innerText = 'Salvar Alterações';
+                        document.getElementById('clientes-tab').click();
+                    });
+                });
+
+                document.querySelectorAll('.delete-cliente-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        showModal("Confirmar Exclusão", "Tem certeza que deseja excluir este cliente?", true, async () => {
+                            try {
+                                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/clientes`, id));
+                                showModal("Sucesso!", "Cliente excluído com sucesso.");
+                            } catch (error) {
+                                console.error("Erro ao excluir cliente:", error);
+                                showModal("Erro!", "Não foi possível excluir o cliente. Tente novamente.");
+                            }
+                        });
+                    });
+                });
+            }, (error) => {
+                console.error("Erro ao carregar clientes:", error);
+                showModal("Erro de Dados", "Não foi possível carregar a lista de clientes.");
+            });
+
+            // Ouvinte para a coleção de Ativos
+            const ativosRef = collection(db, `artifacts/${appId}/users/${userId}/ativos`);
+            onSnapshot(ativosRef, (snapshot) => {
+                const ativosList = document.getElementById('ativos-list');
+                const ativoSelect = document.getElementById('pedido-descricao-ativos');
+                ativosList.innerHTML = '';
+                ativoSelect.innerHTML = '<option value="">-- Selecione uma descrição --</option>';
+                ativosData = {};
+
+                if (snapshot.empty) {
+                    ativosList.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhuma descrição de ativo cadastrada.</td></tr>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    ativosData[doc.id] = data;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="whitespace-nowrap">${data.descricao}</td>
+                        <td class="text-right whitespace-nowrap">
+                            <button data-id="${doc.id}" class="edit-ativo-btn text-blue-400 hover:text-blue-200 mr-2">Editar</button>
+                            <button data-id="${doc.id}" class="delete-ativo-btn text-red-400 hover:text-red-200">Excluir</button>
+                        </td>
+                    `;
+                    ativosList.appendChild(row);
+
+                    const option = document.createElement('option');
+                    option.value = data.descricao;
+                    option.textContent = data.descricao;
+                    ativoSelect.appendChild(option);
+                });
+
+                document.querySelectorAll('.edit-ativo-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        editingAtivoId = id;
+                        document.getElementById('ativo-descricao').value = ativosData[id].descricao;
+                        document.getElementById('submit-ativo-btn').innerText = 'Salvar Alterações';
+                        document.getElementById('ativos-tab').click();
+                    });
+                });
+
+                document.querySelectorAll('.delete-ativo-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        showModal("Confirmar Exclusão", "Tem certeza que deseja excluir esta descrição de ativo?", true, async () => {
+                            try {
+                                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/ativos`, id));
+                                showModal("Sucesso!", "Descrição de ativo excluída com sucesso.");
+                            } catch (error) {
+                                console.error("Erro ao excluir ativo:", error);
+                                showModal("Erro!", "Não foi possível excluir a descrição do ativo. Tente novamente.");
+                            }
+                        });
+                    });
+                });
+            }, (error) => {
+                console.error("Erro ao carregar ativos:", error);
+                showModal("Erro de Dados", "Não foi possível carregar a lista de ativos.");
+            });
+
+            // Ouvinte para a coleção de Pedidos
+            const pedidosRef = collection(db, `artifacts/${appId}/users/${userId}/pedidos`);
+            onSnapshot(pedidosRef, (snapshot) => {
+                const pedidosList = document.getElementById('pedidos-list');
+                pedidosList.innerHTML = '';
+
+                if (snapshot.empty) {
+                    pedidosList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">Nenhum pedido cadastrado.</td></tr>';
+                    return;
+                }
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const dataPedido = data.dataCriacao ? new Date(data.dataCriacao.toDate()).toLocaleDateString() : 'N/A';
+                    
+                    const descricaoHtml = data.descricaoAtivos
+                        ? `<ul><li>${data.descricaoAtivos}</li></ul>`
+                        : 'N/A';
+                        
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="whitespace-nowrap">${data.cliente.nome}</td>
+                        <td class="whitespace-nowrap">${data.ativos}</td>
+                        <td class="whitespace-nowrap">${data.tipoAtivo}</td>
+                        <td>${descricaoHtml}</td>
+                        <td class="whitespace-nowrap">${dataPedido}</td>
+                        <td class="text-right whitespace-nowrap">
+                            <button data-id="${doc.id}" class="edit-pedido-btn text-blue-400 hover:text-blue-200 mr-2">Editar</button>
+                            <button data-id="${doc.id}" class="delete-pedido-btn text-red-400 hover:text-red-200">Excluir</button>
+                        </td>
+                    `;
+                    pedidosList.appendChild(row);
+                });
+
+                document.querySelectorAll('.edit-pedido-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        const pedido = snapshot.docs.find(doc => doc.id === id).data();
+                        
+                        editingPedidoId = id;
+                        document.getElementById('pedido-cliente').value = Object.keys(clientesData).find(key => clientesData[key].nome === pedido.cliente.nome);
+                        document.getElementById('pedido-ativos').value = pedido.ativos;
+                        document.getElementById('pedido-tipo-ativo').value = pedido.tipoAtivo;
+                        document.getElementById('pedido-descricao-ativos').value = pedido.descricaoAtivos;
+
+                        document.getElementById('submit-pedido-btn').innerText = 'Salvar Alterações';
+                        document.getElementById('pedidos-tab').click();
+                    });
+                });
+
+                document.querySelectorAll('.delete-pedido-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        showModal("Confirmar Exclusão", "Tem certeza que deseja excluir este pedido?", true, async () => {
+                            try {
+                                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/pedidos`, id));
+                                showModal("Sucesso!", "Pedido excluído com sucesso.");
+                            } catch (error) {
+                                console.error("Erro ao excluir pedido:", error);
+                                showModal("Erro!", "Não foi possível excluir o pedido. Tente novamente.");
+                            }
+                        });
+                    });
+                });
+            }, (error) => {
+                console.error("Erro ao carregar pedidos:", error);
+                showModal("Erro de Dados", "Não foi possível carregar a lista de pedidos.");
+            });
+        }
+
+        // Lógica de navegação entre as abas
+        const tabs = document.querySelectorAll('.tab-button');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(item => item.classList.remove('active', 'bg-gray-800', 'text-white'));
+                contents.forEach(item => item.classList.add('hidden'));
+
+                tab.classList.add('active', 'bg-gray-800', 'text-white');
+                const targetId = tab.id.replace('-tab', '-section');
+                document.getElementById(targetId).classList.remove('hidden');
+            });
+        });
+
+        // Lógica de formulário para Clientes
+        const addClienteForm = document.getElementById('add-cliente-form');
+        addClienteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) {
+                showModal("Aguarde", "Aguarde a autenticação do usuário...");
+                return;
+            }
+
+            const formData = new FormData(addClienteForm);
+            const cliente = {
+                nome: formData.get('nome')
+            };
+
+            try {
+                if (editingClienteId) {
+                    await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/clientes`, editingClienteId), cliente);
+                    showModal("Sucesso!", "Cliente atualizado com sucesso.");
+                    editingClienteId = null;
+                    document.getElementById('submit-cliente-btn').innerText = 'Adicionar Cliente';
+                } else {
+                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/clientes`), cliente);
+                    showModal("Sucesso!", "Cliente adicionado com sucesso.");
+                }
+                addClienteForm.reset();
+            } catch (error) {
+                console.error("Erro ao salvar cliente:", error);
+                showModal("Erro!", "Não foi possível salvar o cliente. Tente novamente.");
+            }
+        });
+
+        // Lógica de formulário para Ativos
+        const addAtivoForm = document.getElementById('add-ativo-form');
+        addAtivoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) {
+                showModal("Aguarde", "Aguarde a autenticação do usuário...");
+                return;
+            }
+
+            const formData = new FormData(addAtivoForm);
+            const ativo = {
+                descricao: formData.get('descricao')
+            };
+
+            try {
+                if (editingAtivoId) {
+                    await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/ativos`, editingAtivoId), ativo);
+                    showModal("Sucesso!", "Descrição de ativo atualizada com sucesso.");
+                    editingAtivoId = null;
+                    document.getElementById('submit-ativo-btn').innerText = 'Adicionar Descrição';
+                } else {
+                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/ativos`), ativo);
+                    showModal("Sucesso!", "Descrição de ativo adicionada com sucesso.");
+                }
+                addAtivoForm.reset();
+            } catch (error) {
+                console.error("Erro ao salvar ativo:", error);
+                showModal("Erro!", "Não foi possível salvar a descrição do ativo. Tente novamente.");
+            }
+        });
+
+        // Lógica para exibição de detalhes do cliente selecionado
+        const pedidoClienteSelect = document.getElementById('pedido-cliente');
+        const clienteInfoDisplay = document.getElementById('cliente-info-display');
+        
+        pedidoClienteSelect.addEventListener('change', (e) => {
+            const clienteId = e.target.value;
+            if (clienteId && clientesData[clienteId]) {
+                const cliente = clientesData[clienteId];
+                document.getElementById('display-nome').innerText = `Nome: ${cliente.nome}`;
+                clienteInfoDisplay.classList.remove('hidden');
+            } else {
+                clienteInfoDisplay.classList.add('hidden');
+            }
+        });
+        
+        // Lógica de formulário para Pedidos
+        const addPedidoForm = document.getElementById('add-pedido-form');
+        addPedidoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) {
+                showModal("Aguarde", "Aguarde a autenticação do usuário...");
+                return;
+            }
+
+            const clienteId = document.getElementById('pedido-cliente').value;
+            if (!clienteId) {
+                showModal("Atenção", "Por favor, selecione um cliente.");
+                return;
+            }
+
+            const ativos = document.getElementById('pedido-ativos').value;
+            const tipoAtivo = document.getElementById('pedido-tipo-ativo').value;
+            const descricaoAtivo = document.getElementById('pedido-descricao-ativos').value;
+            
+            const pedido = {
+                cliente: clientesData[clienteId],
+                ativos: parseInt(ativos),
+                tipoAtivo: tipoAtivo,
+                descricaoAtivos: descricaoAtivo,
+            };
+            
+            try {
+                if (editingPedidoId) {
+                    await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/pedidos`, editingPedidoId), pedido);
+                    showModal("Sucesso!", "Pedido atualizado com sucesso.");
+                    editingPedidoId = null;
+                    document.getElementById('submit-pedido-btn').innerText = 'Adicionar Pedido';
+                } else {
+                    pedido.dataCriacao = serverTimestamp();
+                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/pedidos`), pedido);
+                    showModal("Sucesso!", "Pedido adicionado com sucesso.");
+                }
+                addPedidoForm.reset();
+            } catch (error) {
+                console.error("Erro ao salvar pedido:", error);
+                showModal("Erro!", "Não foi possível salvar o pedido. Tente novamente.");
+            }
+        });
+
+        // Define a aba inicial ao carregar a página
+        document.getElementById('clientes-tab').click();
+    </script>
+</body>
+</html>
