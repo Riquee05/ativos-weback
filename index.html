@@ -328,7 +328,7 @@
             }
 
             // Ouvinte para a coleção de Clientes
-            const clientesRef = collection(db, `artifacts/${appId}/users/${userId}/clientes`);
+            const clientesRef = collection(db, `artifacts/${appId}/public/data/clientes`);
             onSnapshot(clientesRef, (snapshot) => {
                 const clientesList = document.getElementById('clientes-list');
                 const clienteSelect = document.getElementById('pedido-cliente');
@@ -376,7 +376,7 @@
                         const id = e.target.getAttribute('data-id');
                         showModal("Confirmar Exclusão", "Tem certeza que deseja excluir este cliente?", true, async () => {
                             try {
-                                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/clientes`, id));
+                                await deleteDoc(doc(db, `artifacts/${appId}/public/data/clientes`, id));
                                 showModal("Sucesso!", "Cliente excluído com sucesso.");
                             } catch (error) {
                                 console.error("Erro ao excluir cliente:", error);
@@ -391,7 +391,7 @@
             });
 
             // Ouvinte para a coleção de Ativos
-            const ativosRef = collection(db, `artifacts/${appId}/users/${userId}/ativos`);
+            const ativosRef = collection(db, `artifacts/${appId}/public/data/ativos`);
             onSnapshot(ativosRef, (snapshot) => {
                 const ativosList = document.getElementById('ativos-list');
                 const ativoSelect = document.getElementById('pedido-descricao-ativos');
@@ -439,7 +439,7 @@
                         const id = e.target.getAttribute('data-id');
                         showModal("Confirmar Exclusão", "Tem certeza que deseja excluir esta descrição de ativo?", true, async () => {
                             try {
-                                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/ativos`, id));
+                                await deleteDoc(doc(db, `artifacts/${appId}/public/data/ativos`, id));
                                 showModal("Sucesso!", "Descrição de ativo excluída com sucesso.");
                             } catch (error) {
                                 console.error("Erro ao excluir ativo:", error);
@@ -454,7 +454,7 @@
             });
 
             // Ouvinte para a coleção de Pedidos
-            const pedidosRef = collection(db, `artifacts/${appId}/users/${userId}/pedidos`);
+            const pedidosRef = collection(db, `artifacts/${appId}/public/data/pedidos`);
             onSnapshot(pedidosRef, (snapshot) => {
                 const pedidosList = document.getElementById('pedidos-list');
                 pedidosList.innerHTML = '';
@@ -518,7 +518,7 @@
                         const id = e.target.getAttribute('data-id');
                         showModal("Confirmar Exclusão", "Tem certeza que deseja excluir este pedido?", true, async () => {
                             try {
-                                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/pedidos`, id));
+                                await deleteDoc(doc(db, `artifacts/${appId}/public/data/pedidos`, id));
                                 showModal("Sucesso!", "Pedido excluído com sucesso.");
                             } catch (error) {
                                 console.error("Erro ao excluir pedido:", error);
@@ -601,12 +601,12 @@
 
             try {
                 if (editingClienteId) {
-                    await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/clientes`, editingClienteId), cliente);
+                    await updateDoc(doc(db, `artifacts/${appId}/public/data/clientes`, editingClienteId), cliente);
                     showModal("Sucesso!", "Cliente atualizado com sucesso.");
                     editingClienteId = null;
                     document.getElementById('submit-cliente-btn').innerText = 'Adicionar Cliente';
                 } else {
-                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/clientes`), cliente);
+                    await addDoc(collection(db, `artifacts/${appId}/public/data/clientes`), cliente);
                     showModal("Sucesso!", "Cliente adicionado com sucesso.");
                 }
                 addClienteForm.reset();
@@ -632,12 +632,12 @@
 
             try {
                 if (editingAtivoId) {
-                    await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/ativos`, editingAtivoId), ativo);
+                    await updateDoc(doc(db, `artifacts/${appId}/public/data/ativos`, editingAtivoId), ativo);
                     showModal("Sucesso!", "Descrição de ativo atualizada com sucesso.");
                     editingAtivoId = null;
                     document.getElementById('submit-ativo-btn').innerText = 'Adicionar Descrição';
                 } else {
-                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/ativos`), ativo);
+                    await addDoc(collection(db, `artifacts/${appId}/public/data/ativos`), ativo);
                     showModal("Sucesso!", "Descrição de ativo adicionada com sucesso.");
                 }
                 addAtivoForm.reset();
@@ -694,12 +694,12 @@
             
             try {
                 if (editingPedidoId) {
-                    await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/pedidos`, editingPedidoId), pedido);
+                    await updateDoc(doc(db, `artifacts/${appId}/public/data/pedidos`, editingPedidoId), pedido);
                     showModal("Sucesso!", "Pedido atualizado com sucesso.");
                     editingPedidoId = null;
                     document.getElementById('submit-pedido-btn').innerText = 'Adicionar Pedido';
                 } else {
-                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/pedidos`), pedido);
+                    await addDoc(collection(db, `artifacts/${appId}/public/data/pedidos`), pedido);
                     showModal("Sucesso!", "Pedido adicionado com sucesso.");
                 }
                 addPedidoForm.reset();
