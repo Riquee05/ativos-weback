@@ -58,6 +58,7 @@
             <button id="pedidos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Pedidos</button>
             <button id="lista-pedidos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Lista de Pedidos</button>
             <button id="ativos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Ativos</button>
+            <button id="log-pedidos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Log de Pedidos</button>
         </div>
 
         <!-- Seção de Clientes -->
@@ -151,7 +152,6 @@
             <div class="card p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold">Lista de Pedidos</h2>
-                    <button id="export-pedidos-btn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Exportar para Excel</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="table-auto min-w-full divide-y divide-gray-600">
@@ -169,6 +169,34 @@
                         <tbody id="pedidos-list" class="bg-gray-700 divide-y divide-gray-600">
                             <!-- Pedidos serão inseridos aqui dinamicamente pelo JavaScript -->
                             <tr><td colspan="7" class="text-center py-4 text-gray-400">Nenhum pedido cadastrado.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Log de Pedidos -->
+        <div id="log-pedidos-section" class="tab-content mt-6 hidden">
+            <div class="card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">Log de Pedidos Concluídos</h2>
+                    <button id="export-log-btn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Exportar para Excel</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table-auto min-w-full divide-y divide-gray-600">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th scope="col">Cliente</th>
+                                <th scope="col">Ativos</th>
+                                <th scope="col">Tipo de Ativo</th>
+                                <th scope="col">Descrição dos Ativos</th>
+                                <th scope="col">Data do Pedido</th>
+                                <th scope="col">Observações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-pedidos-list" class="bg-gray-700 divide-y divide-gray-600">
+                            <!-- Pedidos concluídos serão inseridos aqui dinamicamente -->
+                            <tr><td colspan="6" class="text-center py-4 text-gray-400">Nenhum pedido no log.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -261,6 +289,7 @@
         let editingAtivoId = null;
         let editingPedidoId = null;
         let allPedidos = [];
+        let concludedPedidos = [];
 
         const modal = document.getElementById('message-modal');
         const modalTitle = document.getElementById('modal-title');
@@ -457,7 +486,7 @@
                 showModal("Erro de Dados", "Não foi possível carregar a lista de ativos.");
             });
 
-            // Ouvinte para a coleção de Pedidos
+            // Ouvinte para a coleção de Pedidos Ativos
             const pedidosRef = collection(db, `artifacts/${appId}/public/data/pedidos`);
             onSnapshot(pedidosRef, (snapshot) => {
                 const pedidosList = document.getElementById('pedidos-list');
@@ -490,11 +519,31 @@
                         <td class="whitespace-nowrap">${dataPedido}</td>
                         <td>${observacoesHtml}</td>
                         <td class="text-right whitespace-nowrap">
+                            <button data-id="${doc.id}" class="concluir-pedido-btn py-1 px-2 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2">Concluir</button>
                             <button data-id="${doc.id}" class="edit-pedido-btn text-blue-400 hover:text-blue-200 mr-2">Editar</button>
                             <button data-id="${doc.id}" class="delete-pedido-btn text-red-400 hover:text-red-200">Excluir</button>
                         </td>
                     `;
                     pedidosList.appendChild(row);
+                });
+
+                document.querySelectorAll('.concluir-pedido-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        const pedido = allPedidos.find(p => p.id === id);
+                        if (pedido) {
+                            showModal("Confirmar Conclusão", `Deseja concluir o pedido de ${pedido.cliente.nome}?`, true, async () => {
+                                try {
+                                    await addDoc(collection(db, `artifacts/${appId}/public/data/pedidos_concluidos`), { ...pedido, dataConclusao: new Date().toISOString() });
+                                    await deleteDoc(doc(db, `artifacts/${appId}/public/data/pedidos`, id));
+                                    showModal("Sucesso!", "Pedido concluído e movido para o log.");
+                                } catch (error) {
+                                    console.error("Erro ao concluir pedido:", error);
+                                    showModal("Erro!", "Não foi possível concluir o pedido. Tente novamente.");
+                                }
+                            });
+                        }
+                    });
                 });
 
                 document.querySelectorAll('.edit-pedido-btn').forEach(button => {
@@ -535,21 +584,122 @@
                 console.error("Erro ao carregar pedidos:", error);
                 showModal("Erro de Dados", "Não foi possível carregar a lista de pedidos.");
             });
+
+            // Ouvinte para a coleção de Ativos
+            const ativosRef = collection(db, `artifacts/${appId}/public/data/ativos`);
+            onSnapshot(ativosRef, (snapshot) => {
+                const ativosList = document.getElementById('ativos-list');
+                const ativoSelect = document.getElementById('pedido-descricao-ativos');
+                ativosList.innerHTML = '';
+                ativoSelect.innerHTML = '<option value="">-- Selecione uma descrição --</option>';
+                ativosData = {};
+
+                if (snapshot.empty) {
+                    ativosList.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhuma descrição de ativo cadastrada.</td></tr>';
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    ativosData[doc.id] = data;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="whitespace-nowrap">${data.descricao}</td>
+                        <td class="text-right whitespace-nowrap">
+                            <button data-id="${doc.id}" class="edit-ativo-btn text-blue-400 hover:text-blue-200 mr-2">Editar</button>
+                            <button data-id="${doc.id}" class="delete-ativo-btn text-red-400 hover:text-red-200">Excluir</button>
+                        </td>
+                    `;
+                    ativosList.appendChild(row);
+
+                    const option = document.createElement('option');
+                    option.value = data.descricao;
+                    option.textContent = data.descricao;
+                    ativoSelect.appendChild(option);
+                });
+
+                document.querySelectorAll('.edit-ativo-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        editingAtivoId = id;
+                        document.getElementById('ativo-descricao').value = ativosData[id].descricao;
+                        document.getElementById('submit-ativo-btn').innerText = 'Salvar Alterações';
+                        document.getElementById('ativos-tab').click();
+                    });
+                });
+
+                document.querySelectorAll('.delete-ativo-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        showModal("Confirmar Exclusão", "Tem certeza que deseja excluir esta descrição de ativo?", true, async () => {
+                            try {
+                                await deleteDoc(doc(db, `artifacts/${appId}/public/data/ativos`, id));
+                                showModal("Sucesso!", "Descrição de ativo excluída com sucesso.");
+                            } catch (error) {
+                                console.error("Erro ao excluir ativo:", error);
+                                showModal("Erro!", "Não foi possível excluir a descrição do ativo. Tente novamente.");
+                            }
+                        });
+                    });
+                });
+            }, (error) => {
+                console.error("Erro ao carregar ativos:", error);
+                showModal("Erro de Dados", "Não foi possível carregar a lista de ativos.");
+            });
+
+            // Ouvinte para a coleção de Pedidos Concluídos (Log)
+            const logPedidosRef = collection(db, `artifacts/${appId}/public/data/pedidos_concluidos`);
+            onSnapshot(logPedidosRef, (snapshot) => {
+                const logPedidosList = document.getElementById('log-pedidos-list');
+                logPedidosList.innerHTML = '';
+                concludedPedidos = [];
+                
+                if (snapshot.empty) {
+                    logPedidosList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">Nenhum pedido no log.</td></tr>';
+                    return;
+                }
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    concludedPedidos.push({ id: doc.id, ...data });
+
+                    const dataPedido = data.dataPedido || (data.dataCriacao ? new Date(data.dataCriacao.toDate()).toLocaleDateString() : 'N/A');
+                    const descricaoHtml = data.descricaoAtivos
+                        ? `<ul><li>${data.descricaoAtivos}</li></ul>`
+                        : 'N/A';
+                    const observacoesHtml = data.observacoes ? data.observacoes : 'N/A';
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="whitespace-nowrap">${data.cliente.nome}</td>
+                        <td class="whitespace-nowrap">${data.ativos}</td>
+                        <td class="whitespace-nowrap">${data.tipoAtivo}</td>
+                        <td>${descricaoHtml}</td>
+                        <td class="whitespace-nowrap">${dataPedido}</td>
+                        <td>${observacoesHtml}</td>
+                    `;
+                    logPedidosList.appendChild(row);
+                });
+            }, (error) => {
+                console.error("Erro ao carregar o log de pedidos:", error);
+                showModal("Erro de Dados", "Não foi possível carregar o log de pedidos concluídos.");
+            });
         }
 
         // Função para exportar dados para CSV
-        document.getElementById('export-pedidos-btn').addEventListener('click', async () => {
-            if (allPedidos.length === 0) {
-                showModal("Atenção", "Não há pedidos para exportar.");
+        document.getElementById('export-log-btn').addEventListener('click', async () => {
+            if (concludedPedidos.length === 0) {
+                showModal("Atenção", "Não há pedidos no log para exportar.");
                 return;
             }
-
+        
             // Cabeçalho do CSV
             const headers = ["Cliente", "Ativos", "Tipo do Ativo", "Descrição dos Ativos", "Data do Pedido", "Observações"];
             const headerRow = headers.join(";") + "\n";
-
+        
             // Dados
-            const csvRows = allPedidos.map(pedido => {
+            const csvRows = concludedPedidos.map(pedido => {
                 const clienteNome = `"${pedido.cliente.nome.replace(/"/g, '""')}"`;
                 const ativos = pedido.ativos;
                 const tipoAtivo = `"${pedido.tipoAtivo.replace(/"/g, '""')}"`;
@@ -558,19 +708,19 @@
                 const observacoes = `"${(pedido.observacoes || '').replace(/"/g, '""')}"`;
                 return [clienteNome, ativos, tipoAtivo, descricaoAtivos, dataPedido, observacoes].join(";");
             }).join("\n");
-
+        
             const csvString = headerRow + csvRows;
-
+        
             const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', 'pedidos_exportados.csv');
+            link.setAttribute('download', 'log_pedidos_concluidos.csv');
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showModal("Exportação Concluída", "Os pedidos foram exportados com sucesso para um arquivo CSV.");
+            showModal("Exportação Concluída", "O log de pedidos foi exportado com sucesso para um arquivo CSV.");
         });
 
 
