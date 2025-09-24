@@ -256,7 +256,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, addDoc, onSnapshot, query, serverTimestamp, deleteDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, collection, addDoc, onSnapshot, serverTimestamp, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
         // =========================================================================
@@ -282,6 +282,7 @@
         let db;
         let auth;
         let userId = null;
+        let isListenersInitialized = false; // Flag para garantir que os ouvintes sejam configurados apenas uma vez
         let clientesData = {}; 
         let ativosData = {};
         
@@ -336,7 +337,10 @@
                 if (user) {
                     userId = user.uid;
                     document.getElementById('user-info').innerText = `ID do usuário: ${userId}`;
-                    setupFirestoreListeners();
+                    if (!isListenersInitialized) {
+                        setupFirestoreListeners();
+                        isListenersInitialized = true;
+                    }
                 } else {
                     // Tenta fazer login anonimamente se o usuário não estiver autenticado
                     // Isso é o ideal para um aplicativo de uso geral sem login de usuário
@@ -353,7 +357,13 @@
             showModal("Erro de Inicialização", "Não foi possível inicializar o aplicativo. Verifique a configuração do Firebase.");
         }
 
-        // Configura os ouvintes de dados do Firestore para as três coleções
+        // Referências das coleções do Firestore no escopo do módulo
+        const clientesRef = collection(db, `artifacts/${appId}/public/data/clientes`);
+        const ativosRef = collection(db, `artifacts/${appId}/public/data/ativos`);
+        const pedidosRef = collection(db, `artifacts/${appId}/public/data/pedidos`);
+        const logPedidosRef = collection(db, `artifacts/${appId}/public/data/pedidos_concluidos`);
+
+        // Configura os ouvintes de dados do Firestore para as coleções
         function setupFirestoreListeners() {
             if (!userId) {
                 console.error("Erro: userId não disponível para configurar ouvintes do Firestore.");
@@ -361,7 +371,6 @@
             }
 
             // Ouvinte para a coleção de Clientes
-            const clientesRef = collection(db, `artifacts/${appId}/public/data/clientes`);
             onSnapshot(clientesRef, (snapshot) => {
                 const clientesList = document.getElementById('clientes-list');
                 const clienteSelect = document.getElementById('pedido-cliente');
@@ -424,7 +433,6 @@
             });
 
             // Ouvinte para a coleção de Ativos
-            const ativosRef = collection(db, `artifacts/${appId}/public/data/ativos`);
             onSnapshot(ativosRef, (snapshot) => {
                 const ativosList = document.getElementById('ativos-list');
                 const ativoSelect = document.getElementById('pedido-descricao-ativos');
@@ -487,7 +495,6 @@
             });
 
             // Ouvinte para a coleção de Pedidos Ativos
-            const pedidosRef = collection(db, `artifacts/${appId}/public/data/pedidos`);
             onSnapshot(pedidosRef, (snapshot) => {
                 const pedidosList = document.getElementById('pedidos-list');
                 pedidosList.innerHTML = '';
@@ -585,71 +592,7 @@
                 showModal("Erro de Dados", "Não foi possível carregar a lista de pedidos.");
             });
 
-            // Ouvinte para a coleção de Ativos
-            const ativosRef = collection(db, `artifacts/${appId}/public/data/ativos`);
-            onSnapshot(ativosRef, (snapshot) => {
-                const ativosList = document.getElementById('ativos-list');
-                const ativoSelect = document.getElementById('pedido-descricao-ativos');
-                ativosList.innerHTML = '';
-                ativoSelect.innerHTML = '<option value="">-- Selecione uma descrição --</option>';
-                ativosData = {};
-
-                if (snapshot.empty) {
-                    ativosList.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhuma descrição de ativo cadastrada.</td></tr>';
-                    return;
-                }
-
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    ativosData[doc.id] = data;
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="whitespace-nowrap">${data.descricao}</td>
-                        <td class="text-right whitespace-nowrap">
-                            <button data-id="${doc.id}" class="edit-ativo-btn text-blue-400 hover:text-blue-200 mr-2">Editar</button>
-                            <button data-id="${doc.id}" class="delete-ativo-btn text-red-400 hover:text-red-200">Excluir</button>
-                        </td>
-                    `;
-                    ativosList.appendChild(row);
-
-                    const option = document.createElement('option');
-                    option.value = data.descricao;
-                    option.textContent = data.descricao;
-                    ativoSelect.appendChild(option);
-                });
-
-                document.querySelectorAll('.edit-ativo-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const id = e.target.getAttribute('data-id');
-                        editingAtivoId = id;
-                        document.getElementById('ativo-descricao').value = ativosData[id].descricao;
-                        document.getElementById('submit-ativo-btn').innerText = 'Salvar Alterações';
-                        document.getElementById('ativos-tab').click();
-                    });
-                });
-
-                document.querySelectorAll('.delete-ativo-btn').forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const id = e.target.getAttribute('data-id');
-                        showModal("Confirmar Exclusão", "Tem certeza que deseja excluir esta descrição de ativo?", true, async () => {
-                            try {
-                                await deleteDoc(doc(db, `artifacts/${appId}/public/data/ativos`, id));
-                                showModal("Sucesso!", "Descrição de ativo excluída com sucesso.");
-                            } catch (error) {
-                                console.error("Erro ao excluir ativo:", error);
-                                showModal("Erro!", "Não foi possível excluir a descrição do ativo. Tente novamente.");
-                            }
-                        });
-                    });
-                });
-            }, (error) => {
-                console.error("Erro ao carregar ativos:", error);
-                showModal("Erro de Dados", "Não foi possível carregar a lista de ativos.");
-            });
-
             // Ouvinte para a coleção de Pedidos Concluídos (Log)
-            const logPedidosRef = collection(db, `artifacts/${appId}/public/data/pedidos_concluidos`);
             onSnapshot(logPedidosRef, (snapshot) => {
                 const logPedidosList = document.getElementById('log-pedidos-list');
                 logPedidosList.innerHTML = '';
