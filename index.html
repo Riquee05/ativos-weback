@@ -56,6 +56,7 @@
         <div class="flex border-b border-gray-600">
             <button id="clientes-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Clientes</button>
             <button id="pedidos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Pedidos</button>
+            <button id="lista-pedidos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Lista de Pedidos</button>
             <button id="ativos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Ativos</button>
         </div>
 
@@ -91,39 +92,7 @@
             </div>
         </div>
 
-        <!-- Seção de Ativos -->
-        <div id="ativos-section" class="tab-content mt-6 hidden">
-            <div class="card p-6 mb-8">
-                <h2 class="text-xl font-bold mb-4">Adicionar Descrição de Ativo</h2>
-                <form id="add-ativo-form" class="space-y-4">
-                    <div>
-                        <label for="ativo-descricao" class="block text-sm font-medium text-gray-300">Descrição do Ativo</label>
-                        <textarea id="ativo-descricao" name="descricao" rows="2" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500" required placeholder="Ex: Notebook Dell Latitude 3420"></textarea>
-                    </div>
-                    <button id="submit-ativo-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Adicionar Descrição</button>
-                </form>
-            </div>
-            
-            <div class="card p-6">
-                <h2 class="text-xl font-bold mb-4">Base de Ativos</h2>
-                <div class="overflow-x-auto">
-                    <table class="table-auto min-w-full divide-y divide-gray-600">
-                        <thead class="bg-gray-800">
-                            <tr>
-                                <th scope="col">Descrição do Ativo</th>
-                                <th scope="col" class="text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ativos-list" class="bg-gray-700 divide-y divide-gray-600">
-                            <!-- Ativos serão inseridos aqui dinamicamente pelo JavaScript -->
-                            <tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhuma descrição de ativo cadastrada.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Seção de Pedidos -->
+        <!-- Seção de Pedidos (Formulário) -->
         <div id="pedidos-section" class="tab-content mt-6 hidden">
             <div class="card p-6 mb-8">
                 <h2 class="text-xl font-bold mb-4">Adicionar Novo Pedido</h2>
@@ -175,7 +144,10 @@
                     <button id="submit-pedido-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Adicionar Pedido</button>
                 </form>
             </div>
-            
+        </div>
+
+        <!-- Seção de Lista de Pedidos -->
+        <div id="lista-pedidos-section" class="tab-content mt-6 hidden">
             <div class="card p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold">Lista de Pedidos</h2>
@@ -197,6 +169,38 @@
                         <tbody id="pedidos-list" class="bg-gray-700 divide-y divide-gray-600">
                             <!-- Pedidos serão inseridos aqui dinamicamente pelo JavaScript -->
                             <tr><td colspan="7" class="text-center py-4 text-gray-400">Nenhum pedido cadastrado.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Ativos -->
+        <div id="ativos-section" class="tab-content mt-6 hidden">
+            <div class="card p-6 mb-8">
+                <h2 class="text-xl font-bold mb-4">Adicionar Descrição de Ativo</h2>
+                <form id="add-ativo-form" class="space-y-4">
+                    <div>
+                        <label for="ativo-descricao" class="block text-sm font-medium text-gray-300">Descrição do Ativo</label>
+                        <textarea id="ativo-descricao" name="descricao" rows="2" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500" required placeholder="Ex: Notebook Dell Latitude 3420"></textarea>
+                    </div>
+                    <button id="submit-ativo-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Adicionar Descrição</button>
+                </form>
+            </div>
+            
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-4">Base de Ativos</h2>
+                <div class="overflow-x-auto">
+                    <table class="table-auto min-w-full divide-y divide-gray-600">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th scope="col">Descrição do Ativo</th>
+                                <th scope="col" class="text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ativos-list" class="bg-gray-700 divide-y divide-gray-600">
+                            <!-- Ativos serão inseridos aqui dinamicamente pelo JavaScript -->
+                            <tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhuma descrição de ativo cadastrada.</td></tr>
                         </tbody>
                     </table>
                 </div>
