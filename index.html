@@ -148,16 +148,6 @@
                     </div>
                     
                     <div>
-                        <label for="pedido-tipo-ativo" class="block text-sm font-medium text-gray-300">Tipo do Ativo</label>
-                        <select id="pedido-tipo-ativo" name="tipo_ativo" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
-                            <option value="">-- Selecione o tipo --</option>
-                            <option value="Notebook">Notebook</option>
-                            <option value="Desktop">Desktop</option>
-                            <option value="Smartphone">Smartphone</option>
-                        </select>
-                    </div>
-                    
-                    <div>
                         <label for="pedido-descricao-ativos" class="block text-sm font-medium text-gray-300">Descrição do Ativo</label>
                         <select id="pedido-descricao-ativos" name="descricao_ativos" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
                             <option value="">-- Selecione uma descrição --</option>
@@ -167,6 +157,14 @@
                     <div>
                         <label for="pedido-data" class="block text-sm font-medium text-gray-300">Data do Pedido</label>
                         <input type="date" id="pedido-data" name="data" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+                    
+                    <div>
+                        <label for="pedido-local-entrega" class="block text-sm font-medium text-gray-300">Local de Entrega</label>
+                        <select id="pedido-local-entrega" name="local_entrega" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                            <option value="Correios">Correios</option>
+                            <option value="São Paulo">São Paulo</option>
+                        </select>
                     </div>
 
                     <div>
@@ -206,6 +204,15 @@
                         </select>
                     </div>
 
+                    <div class="flex-1">
+                        <label for="filtro-local-entrega" class="block text-sm font-medium text-gray-300">Filtrar por Local</label>
+                        <select id="filtro-local-entrega" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                            <option value="Todos">Todos</option>
+                            <option value="Correios">Correios</option>
+                            <option value="São Paulo">São Paulo</option>
+                        </select>
+                    </div>
+                    
                     <input type="text" id="filtro-pedidos" placeholder="Pesquisar por cliente..." class="w-full md:w-auto rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
                     <button id="sort-pedidos-btn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Ordenar A-Z</button>
                 </div>
@@ -215,11 +222,11 @@
                             <tr>
                                 <th scope="col">Cliente</th>
                                 <th scope="col">Ativos</th>
-                                <th scope="col">Tipo de Ativo</th>
                                 <th scope="col">Descrição dos Ativos</th>
                                 <th scope="col">Data do Pedido</th>
                                 <th scope="col">Observações</th>
                                 <th scope="col">Status</th>
+                                <th scope="col">Local de Entrega</th>
                                 <th scope="col" class="text-right">Ações</th>
                             </tr>
                         </thead>
@@ -256,10 +263,10 @@
                             <tr>
                                 <th scope="col">Cliente</th>
                                 <th scope="col">Ativos</th>
-                                <th scope="col">Tipo de Ativo</th>
                                 <th scope="col">Descrição dos Ativos</th>
                                 <th scope="col">Data do Pedido</th>
                                 <th scope="col">Observações</th>
+                                <th scope="col">Local de Entrega</th>
                             </tr>
                         </thead>
                         <tbody id="log-pedidos-list" class="bg-gray-700 divide-y divide-gray-600">
@@ -424,16 +431,23 @@
                         <option value="Na Expedição" ${data.status === 'Na Expedição' ? 'selected' : ''}>Na Expedição</option>
                     </select>
                 `;
+                
+                const localEntregaOptions = `
+                    <select class="local-entrega-select rounded-md bg-gray-700 text-white" data-id="${data.id}">
+                        <option value="Correios" ${data.localEntrega === 'Correios' ? 'selected' : ''}>Correios</option>
+                        <option value="São Paulo" ${data.localEntrega === 'São Paulo' ? 'selected' : ''}>São Paulo</option>
+                    </select>
+                `;
                     
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="whitespace-nowrap">${data.cliente.nome}</td>
                     <td class="whitespace-nowrap">${data.ativos}</td>
-                    <td class="whitespace-nowrap">${data.tipoAtivo}</td>
                     <td>${descricaoHtml}</td>
                     <td class="whitespace-nowrap">${dataPedido}</td>
                     <td>${observacoesHtml}</td>
                     <td>${statusOptions}</td>
+                    <td>${localEntregaOptions}</td>
                     <td class="text-right whitespace-nowrap">
                         <button data-id="${data.id}" class="concluir-pedido-btn py-1 px-2 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2">Concluir</button>
                         <button data-id="${data.id}" class="edit-pedido-btn text-blue-400 hover:text-blue-200 mr-2">Editar</button>
@@ -471,10 +485,10 @@
                         editingPedidoId = id;
                         document.getElementById('pedido-cliente').value = Object.keys(clientesData).find(key => clientesData[key].nome === pedido.cliente.nome);
                         document.getElementById('pedido-ativos').value = pedido.ativos;
-                        document.getElementById('pedido-tipo-ativo').value = pedido.tipoAtivo;
                         document.getElementById('pedido-descricao-ativos').value = pedido.descricaoAtivos;
                         document.getElementById('pedido-data').value = pedido.dataPedido || '';
                         document.getElementById('pedido-observacoes').value = pedido.observacoes || '';
+                        document.getElementById('pedido-local-entrega').value = pedido.localEntrega || 'Correios';
 
                         document.getElementById('submit-pedido-btn').innerText = 'Salvar Alterações';
                         document.getElementById('pedidos-tab').click();
@@ -511,6 +525,21 @@
                     }
                 });
             });
+
+            // Adiciona ouvinte para a alteração de local de entrega
+            document.querySelectorAll('.local-entrega-select').forEach(select => {
+                select.addEventListener('change', async (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    const newLocalEntrega = e.target.value;
+                    try {
+                        await updateDoc(doc(db, `artifacts/${appId}/public/data/pedidos`, id), { localEntrega: newLocalEntrega });
+                        showModal("Sucesso!", `Local de entrega atualizado para: ${newLocalEntrega}`);
+                    } catch (error) {
+                        console.error("Erro ao atualizar local de entrega do pedido:", error);
+                        showModal("Erro!", "Não foi possível atualizar o local de entrega. Tente novamente.");
+                    }
+                });
+            });
         }
 
         // Função para renderizar a lista de pedidos concluídos com base nos dados e filtro
@@ -529,15 +558,16 @@
                     ? `<ul><li>${data.descricaoAtivos}</li></ul>`
                     : 'N/A';
                 const observacoesHtml = data.observacoes ? data.observacoes : 'N/A';
+                const localEntrega = data.localEntrega || 'N/A';
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="whitespace-nowrap">${data.cliente.nome}</td>
                     <td class="whitespace-nowrap">${data.ativos}</td>
-                    <td class="whitespace-nowrap">${data.tipoAtivo}</td>
                     <td>${descricaoHtml}</td>
                     <td class="whitespace-nowrap">${dataPedido}</td>
                     <td>${observacoesHtml}</td>
+                    <td class="whitespace-nowrap">${localEntrega}</td>
                 `;
                 logPedidosList.appendChild(row);
             });
@@ -709,18 +739,18 @@
             }
         
             // Cabeçalho do CSV
-            const headers = ["Cliente", "Ativos", "Tipo do Ativo", "Descrição dos Ativos", "Data do Pedido", "Observações"];
+            const headers = ["Cliente", "Ativos", "Descrição dos Ativos", "Data do Pedido", "Observações", "Local de Entrega"];
             const headerRow = headers.join(";") + "\n";
         
             // Dados
             const csvRows = concludedPedidos.map(pedido => {
                 const clienteNome = `"${pedido.cliente.nome.replace(/"/g, '""')}"`;
                 const ativos = pedido.ativos;
-                const tipoAtivo = `"${pedido.tipoAtivo.replace(/"/g, '""')}"`;
                 const descricaoAtivos = `"${pedido.descricaoAtivos.replace(/"/g, '""')}"`;
                 const dataPedido = `"${pedido.dataPedido.replace(/"/g, '""')}"`;
                 const observacoes = `"${(pedido.observacoes || '').replace(/"/g, '""')}"`;
-                return [clienteNome, ativos, tipoAtivo, descricaoAtivos, dataPedido, observacoes].join(";");
+                const localEntrega = `"${(pedido.localEntrega || '').replace(/"/g, '""')}"`;
+                return [clienteNome, ativos, descricaoAtivos, dataPedido, observacoes, localEntrega].join(";");
             }).join("\n");
         
             const csvString = headerRow + csvRows;
@@ -741,6 +771,7 @@
         let sortDirection = 'asc';
         const filtroPedidosInput = document.getElementById('filtro-pedidos');
         const filtroStatusInput = document.getElementById('filtro-status-pedido');
+        const filtroLocalEntregaInput = document.getElementById('filtro-local-entrega');
         const filtroDataInicioInput = document.getElementById('filtro-data-inicio');
         const filtroDataFimInput = document.getElementById('filtro-data-fim');
         const filtrarPedidosBtn = document.getElementById('filtrar-pedidos-btn');
@@ -749,6 +780,7 @@
         function aplicarFiltrosEOrdenacao() {
             const filtroTexto = filtroPedidosInput.value.toLowerCase();
             const filtroStatus = filtroStatusInput.value;
+            const filtroLocalEntrega = filtroLocalEntregaInput.value;
             const dataInicio = filtroDataInicioInput.value ? new Date(filtroDataInicioInput.value) : null;
             const dataFim = filtroDataFimInput.value ? new Date(filtroDataFimInput.value) : null;
             if (dataFim) dataFim.setHours(23, 59, 59, 999);
@@ -758,12 +790,11 @@
                 const dataPedido = new Date(pedido.dataPedido);
                 
                 const correspondeAoNome = nomeCliente.includes(filtroTexto);
-                
                 const correspondeAData = (!dataInicio || dataPedido >= dataInicio) && (!dataFim || dataPedido <= dataFim);
-
                 const correspondeAStatus = filtroStatus === 'Todos' || pedido.status === filtroStatus;
+                const correspondeAoLocal = filtroLocalEntrega === 'Todos' || pedido.localEntrega === filtroLocalEntrega;
 
-                return correspondeAoNome && correspondeAData && correspondeAStatus;
+                return correspondeAoNome && correspondeAData && correspondeAStatus && correspondeAoLocal;
             });
             
             pedidosFiltrados.sort((a, b) => {
@@ -781,6 +812,7 @@
 
         filtroPedidosInput.addEventListener('input', aplicarFiltrosEOrdenacao);
         filtroStatusInput.addEventListener('change', aplicarFiltrosEOrdenacao);
+        filtroLocalEntregaInput.addEventListener('change', aplicarFiltrosEOrdenacao);
         filtrarPedidosBtn.addEventListener('click', aplicarFiltrosEOrdenacao);
         sortPedidosBtn.addEventListener('click', () => {
             sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -916,19 +948,19 @@
             }
 
             const ativos = document.getElementById('pedido-ativos').value;
-            const tipoAtivo = document.getElementById('pedido-tipo-ativo').value;
             const descricaoAtivo = document.getElementById('pedido-descricao-ativos').value;
             const dataPedido = document.getElementById('pedido-data').value;
             const observacoes = document.getElementById('pedido-observacoes').value;
+            const localEntrega = document.getElementById('pedido-local-entrega').value;
             
             const pedido = {
                 cliente: clientesData[clienteId],
                 ativos: parseInt(ativos),
-                tipoAtivo: tipoAtivo,
                 descricaoAtivos: descricaoAtivo,
                 dataPedido: dataPedido,
                 observacoes: observacoes,
-                status: 'Pendente Preparação' // Novo campo de status inicial
+                status: 'Pendente Preparação',
+                localEntrega: localEntrega
             };
             
             try {
