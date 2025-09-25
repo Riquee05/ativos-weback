@@ -55,9 +55,9 @@
         <!-- Navegação por abas -->
         <div class="flex border-b border-gray-600">
             <button id="clientes-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Clientes</button>
+            <button id="ativos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Ativos</button>
             <button id="pedidos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Pedidos</button>
             <button id="lista-pedidos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Lista de Pedidos</button>
-            <button id="ativos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Ativos</button>
             <button id="log-pedidos-tab" class="tab-button flex-1 py-3 px-4 text-center text-sm font-semibold rounded-t-lg transition-colors duration-200 text-gray-300 hover:bg-gray-700">Log de Pedidos</button>
         </div>
 
@@ -87,6 +87,38 @@
                         <tbody id="clientes-list" class="bg-gray-700 divide-y divide-gray-600">
                             <!-- Clientes serão inseridos aqui dinamicamente pelo JavaScript -->
                             <tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhum cliente cadastrado.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Ativos -->
+        <div id="ativos-section" class="tab-content mt-6 hidden">
+            <div class="card p-6 mb-8">
+                <h2 class="text-xl font-bold mb-4">Adicionar Descrição de Ativo</h2>
+                <form id="add-ativo-form" class="space-y-4">
+                    <div>
+                        <label for="ativo-descricao" class="block text-sm font-medium text-gray-300">Descrição do Ativo</label>
+                        <textarea id="ativo-descricao" name="descricao" rows="2" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500" required placeholder="Ex: Notebook Dell Latitude 3420"></textarea>
+                    </div>
+                    <button id="submit-ativo-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Adicionar Descrição</button>
+                </form>
+            </div>
+            
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-4">Base de Ativos</h2>
+                <div class="overflow-x-auto">
+                    <table class="table-auto min-w-full divide-y divide-gray-600">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th scope="col">Descrição do Ativo</th>
+                                <th scope="col" class="text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ativos-list" class="bg-gray-700 divide-y divide-gray-600">
+                            <!-- Ativos serão inseridos aqui dinamicamente pelo JavaScript -->
+                            <tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhuma descrição de ativo cadastrada.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -153,8 +185,17 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold">Lista de Pedidos</h2>
                 </div>
-                <div class="flex items-center mb-4 space-x-2">
-                    <input type="text" id="filtro-pedidos" placeholder="Pesquisar por cliente..." class="w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                <div class="flex flex-wrap items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
+                    <div class="flex-1">
+                        <label for="filtro-data-inicio" class="block text-sm font-medium text-gray-300">Data de Início</label>
+                        <input type="date" id="filtro-data-inicio" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+                    <div class="flex-1">
+                        <label for="filtro-data-fim" class="block text-sm font-medium text-gray-300">Data de Fim</label>
+                        <input type="date" id="filtro-data-fim" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+                    <button id="filtrar-pedidos-btn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Filtrar</button>
+                    <input type="text" id="filtro-pedidos" placeholder="Pesquisar por cliente..." class="w-full md:w-auto rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
                     <button id="sort-pedidos-btn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Ordenar A-Z</button>
                 </div>
                 <div class="overflow-x-auto">
@@ -184,6 +225,17 @@
             <div class="card p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold">Log de Pedidos Concluídos</h2>
+                </div>
+                <div class="flex flex-wrap items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
+                    <div class="flex-1">
+                        <label for="log-data-inicio" class="block text-sm font-medium text-gray-300">Data de Início</label>
+                        <input type="date" id="log-data-inicio" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+                    <div class="flex-1">
+                        <label for="log-data-fim" class="block text-sm font-medium text-gray-300">Data de Fim</label>
+                        <input type="date" id="log-data-fim" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+                    <button id="filtrar-log-btn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Filtrar</button>
                     <button id="export-log-btn" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Exportar para Excel</button>
                 </div>
                 <div class="overflow-x-auto">
@@ -201,38 +253,6 @@
                         <tbody id="log-pedidos-list" class="bg-gray-700 divide-y divide-gray-600">
                             <!-- Pedidos concluídos serão inseridos aqui dinamicamente -->
                             <tr><td colspan="6" class="text-center py-4 text-gray-400">Nenhum pedido no log.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Seção de Ativos -->
-        <div id="ativos-section" class="tab-content mt-6 hidden">
-            <div class="card p-6 mb-8">
-                <h2 class="text-xl font-bold mb-4">Adicionar Descrição de Ativo</h2>
-                <form id="add-ativo-form" class="space-y-4">
-                    <div>
-                        <label for="ativo-descricao" class="block text-sm font-medium text-gray-300">Descrição do Ativo</label>
-                        <textarea id="ativo-descricao" name="descricao" rows="2" class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500" required placeholder="Ex: Notebook Dell Latitude 3420"></textarea>
-                    </div>
-                    <button id="submit-ativo-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Adicionar Descrição</button>
-                </form>
-            </div>
-            
-            <div class="card p-6">
-                <h2 class="text-xl font-bold mb-4">Base de Ativos</h2>
-                <div class="overflow-x-auto">
-                    <table class="table-auto min-w-full divide-y divide-gray-600">
-                        <thead class="bg-gray-800">
-                            <tr>
-                                <th scope="col">Descrição do Ativo</th>
-                                <th scope="col" class="text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ativos-list" class="bg-gray-700 divide-y divide-gray-600">
-                            <!-- Ativos serão inseridos aqui dinamicamente pelo JavaScript -->
-                            <tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhuma descrição de ativo cadastrada.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -295,6 +315,7 @@
         let editingPedidoId = null;
         let allPedidos = [];
         let concludedPedidos = [];
+        let originalConcludedPedidos = []; // Armazena a lista completa de pedidos concluídos sem filtro
 
         const modal = document.getElementById('message-modal');
         const modalTitle = document.getElementById('modal-title');
@@ -455,6 +476,36 @@
                 });
             });
         }
+
+        // Função para renderizar a lista de pedidos concluídos com base nos dados e filtro
+        function renderLogPedidosList(pedidosToRender) {
+            const logPedidosList = document.getElementById('log-pedidos-list');
+            logPedidosList.innerHTML = '';
+            
+            if (pedidosToRender.length === 0) {
+                logPedidosList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">Nenhum pedido no log.</td></tr>';
+                return;
+            }
+            
+            pedidosToRender.forEach((data) => {
+                const dataPedido = data.dataPedido || 'N/A';
+                const descricaoHtml = data.descricaoAtivos
+                    ? `<ul><li>${data.descricaoAtivos}</li></ul>`
+                    : 'N/A';
+                const observacoesHtml = data.observacoes ? data.observacoes : 'N/A';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="whitespace-nowrap">${data.cliente.nome}</td>
+                    <td class="whitespace-nowrap">${data.ativos}</td>
+                    <td class="whitespace-nowrap">${data.tipoAtivo}</td>
+                    <td>${descricaoHtml}</td>
+                    <td class="whitespace-nowrap">${dataPedido}</td>
+                    <td>${observacoesHtml}</td>
+                `;
+                logPedidosList.appendChild(row);
+            });
+        }
         
         // Configura os ouvintes de dados do Firestore para as coleções
         function setupFirestoreListeners() {
@@ -594,7 +645,7 @@
                     const data = doc.data();
                     allPedidos.push({ id: doc.id, ...data });
                 });
-                renderPedidosList(allPedidos);
+                aplicarFiltrosEOrdenacao();
             }, (error) => {
                 console.error("Erro ao carregar pedidos:", error);
                 showModal("Erro de Dados", "Não foi possível carregar a lista de pedidos.");
@@ -602,36 +653,12 @@
 
             // Ouvinte para a coleção de Pedidos Concluídos (Log)
             onSnapshot(logPedidosRef, (snapshot) => {
-                const logPedidosList = document.getElementById('log-pedidos-list');
-                logPedidosList.innerHTML = '';
-                concludedPedidos = [];
-                
-                if (snapshot.empty) {
-                    logPedidosList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">Nenhum pedido no log.</td></tr>';
-                    return;
-                }
-                
+                originalConcludedPedidos = [];
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    concludedPedidos.push({ id: doc.id, ...data });
-
-                    const dataPedido = data.dataPedido || (data.dataCriacao ? new Date(data.dataCriacao.toDate()).toLocaleDateString() : 'N/A');
-                    const descricaoHtml = data.descricaoAtivos
-                        ? `<ul><li>${data.descricaoAtivos}</li></ul>`
-                        : 'N/A';
-                    const observacoesHtml = data.observacoes ? data.observacoes : 'N/A';
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="whitespace-nowrap">${data.cliente.nome}</td>
-                        <td class="whitespace-nowrap">${data.ativos}</td>
-                        <td class="whitespace-nowrap">${data.tipoAtivo}</td>
-                        <td>${descricaoHtml}</td>
-                        <td class="whitespace-nowrap">${dataPedido}</td>
-                        <td>${observacoesHtml}</td>
-                    `;
-                    logPedidosList.appendChild(row);
+                    originalConcludedPedidos.push({ id: doc.id, ...data });
                 });
+                aplicarFiltroLog();
             }, (error) => {
                 console.error("Erro ao carregar o log de pedidos:", error);
                 showModal("Erro de Dados", "Não foi possível carregar o log de pedidos concluídos.");
@@ -674,20 +701,32 @@
             showModal("Exportação Concluída", "O log de pedidos foi exportado com sucesso para um arquivo CSV.");
         });
 
-        // Lógica para filtrar e ordenar pedidos
+        // Lógica para filtrar e ordenar pedidos em andamento
         let sortDirection = 'asc';
-        document.getElementById('filtro-pedidos').addEventListener('input', (e) => {
-            const filtro = e.target.value.toLowerCase();
-            const pedidosFiltrados = allPedidos.filter(pedido => 
-                pedido.cliente.nome.toLowerCase().includes(filtro)
-            );
-            renderPedidosList(pedidosFiltrados);
-        });
+        const filtroPedidosInput = document.getElementById('filtro-pedidos');
+        const filtroDataInicioInput = document.getElementById('filtro-data-inicio');
+        const filtroDataFimInput = document.getElementById('filtro-data-fim');
+        const filtrarPedidosBtn = document.getElementById('filtrar-pedidos-btn');
+        const sortPedidosBtn = document.getElementById('sort-pedidos-btn');
 
-        document.getElementById('sort-pedidos-btn').addEventListener('click', () => {
-            const pedidosOrdenados = [...allPedidos];
+        function aplicarFiltrosEOrdenacao() {
+            const filtroTexto = filtroPedidosInput.value.toLowerCase();
+            const dataInicio = filtroDataInicioInput.value ? new Date(filtroDataInicioInput.value) : null;
+            const dataFim = filtroDataFimInput.value ? new Date(filtroDataFimInput.value) : null;
+            if (dataFim) dataFim.setHours(23, 59, 59, 999);
+        
+            let pedidosFiltrados = allPedidos.filter(pedido => {
+                const nomeCliente = pedido.cliente.nome.toLowerCase();
+                const dataPedido = new Date(pedido.dataPedido);
+                
+                const correspondeAoNome = nomeCliente.includes(filtroTexto);
+                
+                const correspondeAData = (!dataInicio || dataPedido >= dataInicio) && (!dataFim || dataPedido <= dataFim);
+
+                return correspondeAoNome && correspondeAData;
+            });
             
-            pedidosOrdenados.sort((a, b) => {
+            pedidosFiltrados.sort((a, b) => {
                 const nomeA = a.cliente.nome.toLowerCase();
                 const nomeB = b.cliente.nome.toLowerCase();
                 if (sortDirection === 'asc') {
@@ -697,10 +736,36 @@
                 }
             });
 
+            renderPedidosList(pedidosFiltrados);
+        }
+
+        filtroPedidosInput.addEventListener('input', aplicarFiltrosEOrdenacao);
+        filtrarPedidosBtn.addEventListener('click', aplicarFiltrosEOrdenacao);
+        sortPedidosBtn.addEventListener('click', () => {
             sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            document.getElementById('sort-pedidos-btn').innerText = `Ordenar ${sortDirection === 'asc' ? 'A-Z' : 'Z-A'}`;
-            renderPedidosList(pedidosOrdenados);
+            sortPedidosBtn.innerText = `Ordenar ${sortDirection === 'asc' ? 'A-Z' : 'Z-A'}`;
+            aplicarFiltrosEOrdenacao();
         });
+        
+        // Lógica para filtrar pedidos concluídos por data
+        const logDataInicioInput = document.getElementById('log-data-inicio');
+        const logDataFimInput = document.getElementById('log-data-fim');
+        const filtrarLogBtn = document.getElementById('filtrar-log-btn');
+
+        function aplicarFiltroLog() {
+            const dataInicio = logDataInicioInput.value ? new Date(logDataInicioInput.value) : null;
+            const dataFim = logDataFimInput.value ? new Date(logDataFimInput.value) : null;
+            if (dataFim) dataFim.setHours(23, 59, 59, 999);
+
+            concludedPedidos = originalConcludedPedidos.filter(pedido => {
+                const dataPedido = new Date(pedido.dataPedido);
+                return (!dataInicio || dataPedido >= dataInicio) && (!dataFim || dataPedido <= dataFim);
+            });
+            renderLogPedidosList(concludedPedidos);
+        }
+        
+        filtrarLogBtn.addEventListener('click', aplicarFiltroLog);
+
 
         // Lógica de navegação entre as abas
         const tabs = document.querySelectorAll('.tab-button');
