@@ -592,11 +592,15 @@
                     clientesList.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhum cliente cadastrado.</td></tr>';
                     return;
                 }
+                
+                const tempClientesArray = [];
 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     clientesData[doc.id] = data;
+                    tempClientesArray.push({ id: doc.id, ...data });
 
+                    // Renderiza a tabela de clientes
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td class="whitespace-nowrap">${data.nome}</td>
@@ -606,12 +610,19 @@
                         </td>
                     `;
                     clientesList.appendChild(row);
+                });
+                
+                // ORDENAÇÃO: Ordena os clientes alfabeticamente para o dropdown
+                tempClientesArray.sort((a, b) => a.nome.localeCompare(b.nome));
 
+                // Popular o dropdown de seleção de cliente
+                tempClientesArray.forEach(cliente => {
                     const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = data.nome;
+                    option.value = cliente.id;
+                    option.textContent = cliente.nome;
                     clienteSelect.appendChild(option);
                 });
+
 
                 document.querySelectorAll('.edit-cliente-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
@@ -649,16 +660,20 @@
                 ativosList.innerHTML = '';
                 ativoSelect.innerHTML = '<option value="">-- Selecione uma descrição --</option>';
                 ativosData = {};
-
+                
                 if (snapshot.empty) {
                     ativosList.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-400">Nenhuma descrição de ativo cadastrada.</td></tr>';
                     return;
                 }
 
+                const tempAtivosArray = [];
+
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     ativosData[doc.id] = data;
-                    
+                    tempAtivosArray.push({ id: doc.id, ...data });
+
+                    // Renderiza a tabela de ativos
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td class="whitespace-nowrap">${data.descricao}</td>
@@ -668,12 +683,19 @@
                         </td>
                     `;
                     ativosList.appendChild(row);
+                });
+                
+                // ORDENAÇÃO: Ordena os ativos alfabeticamente pela descrição para o dropdown
+                tempAtivosArray.sort((a, b) => a.descricao.localeCompare(b.descricao));
 
+                // Popular o dropdown de seleção de ativo
+                tempAtivosArray.forEach(ativo => {
                     const option = document.createElement('option');
-                    option.value = data.descricao;
-                    option.textContent = data.descricao;
+                    option.value = ativo.descricao;
+                    option.textContent = ativo.descricao;
                     ativoSelect.appendChild(option);
                 });
+
 
                 document.querySelectorAll('.edit-ativo-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
