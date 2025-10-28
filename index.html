@@ -147,11 +147,15 @@
                         <input type="number" id="pedido-ativos" name="ativos" min="1" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
                     </div>
                     
-                    <div>
+                    <div class="relative">
                         <label for="pedido-descricao-ativos" class="block text-sm font-medium text-gray-300">Descrição do Ativo</label>
-                        <select id="pedido-descricao-ativos" name="descricao_ativos" required class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500">
-                            <option value="">-- Selecione uma descrição --</option>
-                        </select>
+                        <input type="text" id="pedido-descricao-ativos" name="descricao_ativos" required 
+                               class="mt-1 block w-full rounded-md border-gray-600 shadow-sm bg-gray-700 text-white focus:border-purple-500 focus:ring-purple-500" 
+                               placeholder="Digite para buscar a descrição..." autocomplete="off">
+                        <!-- Div para as sugestões de busca -->
+                        <div id="ativos-suggestions" class="hidden absolute left-0 right-0 bg-gray-700 border border-gray-600 rounded-b-md z-10 max-h-40 overflow-y-auto shadow-xl">
+                            <!-- Sugestões serão injetadas aqui -->
+                        </div>
                     </div>
 
                     <div>
@@ -341,6 +345,64 @@
         const modalBody = document.getElementById('modal-body');
         const modalCloseBtn = document.getElementById('modal-close');
         const modalConfirmBtn = document.getElementById('modal-confirm');
+        
+        // Lógica de busca e sugestão para a Descrição do Ativo na aba Pedidos
+        const ativoSearchInput = document.getElementById('pedido-descricao-ativos');
+        const ativoSuggestionsDiv = document.getElementById('ativos-suggestions');
+
+        if (ativoSearchInput) {
+            ativoSearchInput.addEventListener('input', handleAtivoSearch);
+            // Oculta sugestões quando perde o foco (com um pequeno delay para permitir o clique)
+            ativoSearchInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    ativoSuggestionsDiv.classList.add('hidden');
+                }, 200); 
+            });
+        }
+        
+        function handleAtivoSearch() {
+            const searchTerm = ativoSearchInput.value.toLowerCase();
+            ativoSuggestionsDiv.innerHTML = '';
+            
+            // Só exibe sugestões se o campo não estiver vazio
+            if (searchTerm.length === 0) {
+                ativoSuggestionsDiv.classList.add('hidden');
+                return;
+            }
+            
+            // Converter ativosData em um array de objetos {id, descricao} e garantir ordenação
+            const ativosArray = Object.keys(ativosData).map(id => ({
+                id,
+                descricao: ativosData[id].descricao
+            })).sort((a, b) => a.descricao.localeCompare(b.descricao));
+
+            const filteredAtivos = ativosArray.filter(ativo => 
+                // Filtra se a descrição contém o termo de busca
+                ativo.descricao.toLowerCase().includes(searchTerm)
+            );
+
+            if (filteredAtivos.length > 0) {
+                filteredAtivos.forEach(ativo => {
+                    const suggestionItem = document.createElement('div');
+                    // Usamos mousedown para que o clique seja capturado antes do evento blur
+                    suggestionItem.className = 'p-2 cursor-pointer hover:bg-purple-600 text-sm border-b border-gray-600';
+                    suggestionItem.innerText = ativo.descricao;
+                    suggestionItem.setAttribute('data-value', ativo.descricao);
+
+                    suggestionItem.addEventListener('mousedown', (event) => {
+                        event.preventDefault(); // Mantém o foco no input e previne o blur
+                        ativoSearchInput.value = ativo.descricao; // Preenche o campo de busca
+                        ativoSuggestionsDiv.classList.add('hidden'); // Oculta a lista
+                    });
+
+                    ativoSuggestionsDiv.appendChild(suggestionItem);
+                });
+                ativoSuggestionsDiv.classList.remove('hidden');
+            } else {
+                ativoSuggestionsDiv.classList.add('hidden');
+            }
+        }
+
 
         // Função para exibir um modal customizado, substituindo o alert()
         function showModal(title, message, isConfirmation = false, onConfirm = null) {
@@ -485,7 +547,7 @@
                         editingPedidoId = id;
                         document.getElementById('pedido-cliente').value = Object.keys(clientesData).find(key => clientesData[key].nome === pedido.cliente.nome);
                         document.getElementById('pedido-ativos').value = pedido.ativos;
-                        document.getElementById('pedido-descricao-ativos').value = pedido.descricaoAtivos;
+                        document.getElementById('pedido-descricao-ativos').value = pedido.descricaoAtivos; // Preenche o campo de busca
                         document.getElementById('pedido-data').value = pedido.dataPedido || '';
                         document.getElementById('pedido-observacoes').value = pedido.observacoes || '';
                         document.getElementById('pedido-local-entrega').value = pedido.localEntrega || 'Correios';
@@ -656,9 +718,8 @@
             // Ouvinte para a coleção de Ativos
             onSnapshot(ativosRef, (snapshot) => {
                 const ativosList = document.getElementById('ativos-list');
-                const ativoSelect = document.getElementById('pedido-descricao-ativos');
+                // Remove a referência a ativoSelect, pois agora é um campo de pesquisa
                 ativosList.innerHTML = '';
-                ativoSelect.innerHTML = '<option value="">-- Selecione uma descrição --</option>';
                 ativosData = {};
                 
                 if (snapshot.empty) {
@@ -685,17 +746,10 @@
                     ativosList.appendChild(row);
                 });
                 
-                // ORDENAÇÃO: Ordena os ativos alfabeticamente pela descrição para o dropdown
+                // ORDENAÇÃO: Ordena os ativos alfabeticamente pela descrição
                 tempAtivosArray.sort((a, b) => a.descricao.localeCompare(b.descricao));
-
-                // Popular o dropdown de seleção de ativo
-                tempAtivosArray.forEach(ativo => {
-                    const option = document.createElement('option');
-                    option.value = ativo.descricao;
-                    option.textContent = ativo.descricao;
-                    ativoSelect.appendChild(option);
-                });
-
+                // O dropdown de ativos (agora pesquisa) será preenchido via JS
+                
 
                 document.querySelectorAll('.edit-ativo-btn').forEach(button => {
                     button.addEventListener('click', (e) => {
@@ -970,10 +1024,16 @@
             }
 
             const ativos = document.getElementById('pedido-ativos').value;
-            const descricaoAtivo = document.getElementById('pedido-descricao-ativos').value;
+            const descricaoAtivo = document.getElementById('pedido-descricao-ativos').value; // Pega o valor do campo de busca
             const dataPedido = document.getElementById('pedido-data').value;
             const observacoes = document.getElementById('pedido-observacoes').value;
             const localEntrega = document.getElementById('pedido-local-entrega').value;
+            
+            // Valida se o campo de pesquisa foi preenchido com algo que não está vazio
+            if (!descricaoAtivo) {
+                 showModal("Atenção", "Por favor, selecione ou digite a descrição do ativo.");
+                 return;
+            }
             
             const pedido = {
                 cliente: clientesData[clienteId],
@@ -996,6 +1056,8 @@
                     showModal("Sucesso!", "Pedido adicionado com sucesso.");
                 }
                 addPedidoForm.reset();
+                ativoSearchInput.value = ''; // Limpa o campo de busca após o envio
+                clienteInfoDisplay.classList.add('hidden'); // Oculta o display do cliente
             } catch (error) {
                 console.error("Erro ao salvar pedido:", error);
                 showModal("Erro!", "Não foi possível salvar o pedido. Tente novamente.");
